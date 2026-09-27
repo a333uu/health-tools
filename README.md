@@ -5,7 +5,16 @@
 **两个不需要账号、不需要联网、不需要安装的健康记录工具。**
 **下载一个 HTML 文件，双击就能用。**
 
+[![tests](https://github.com/OWNER/health-tools/actions/workflows/tests.yml/badge.svg)](https://github.com/OWNER/health-tools/actions/workflows/tests.yml)
+
 </div>
+
+<!-- 截图占位：发布时替换为真实截图
+<div align="center">
+<img src="docs/screenshot-today.png" width="300" alt="今日页">
+<img src="docs/screenshot-pool.png" width="300" alt="定投页">
+</div>
+-->
 
 ---
 
@@ -102,6 +111,47 @@ node tests/sim_pool_v10.mjs
 
 ---
 
+## 想自己改 / 开分支？结构很简单
+
+整个东西**没有构建步骤**。改完直接刷新浏览器就能看到效果。
+
+```
+减重助手.html      ← 应用本体：HTML + CSS + JS 全在一个文件里
+服药提醒.html      ← 第二个应用，同样的结构
+tests/             ← 测试，纯 Node.js，无第三方依赖
+tools/             ← 隐私主张校验（把 README 的承诺变成机械门）
+```
+
+`减重助手.html` 内部按功能分了节，搜这些注释就能定位：
+
+| 想改什么 | 搜这个 |
+|---|---|
+| 定投算法（入池公式） | `热量定投引擎` |
+| 健康科目与权重 | `SUBJECTS` |
+| 体重怎么算（现在是 7 日中位数） | `function w7` |
+| 安全下限（女 1200 / 男 1500） | `kcalFloor` |
+| 反馈文案 / 禁止词表 | `FORBIDDEN` |
+| 打卡表单 | `今天记一笔` |
+
+**改完必须跑测试**（尤其改算法）：
+
+```bash
+node tests/invariant_pool.mjs      # 破坏单调性 = 直接红
+node tests/selftest_weight.mjs
+```
+
+**最容易上手的一个贡献**：加一个新的健康科目。
+在 `SUBJECTS` 数组里加一项就行，例如：
+
+```javascript
+{ id: "fiber", field: "fiber", label: "膳食纤维", hint: "蔬菜粗粮豆类", w: 25,
+  options: [{ v: true, label: "够", score: 100 }, { v: false, label: "不够", score: 50 }] }
+```
+
+界面的勾选框、今日页输入行、定投页的指数分解会**自动出现**，不用改渲染代码。
+
+---
+
 ## 隐私：不是承诺，是它做不到
 
 | 主张 | 你可以自己搜 |
@@ -111,6 +161,14 @@ node tests/sim_pool_v10.mjs
 | 零依赖 | 运行只需**一个文件**，没有构建步骤、没有 npm |
 | 数据不出本机 | 只写一个 `localStorage` 键（`weight_coach_v1` / `med_reminder_v1`），无账号、无服务器 |
 | 零追踪 | `analytics` / `gtag` / `mixpanel` / `sentry` / `telemetry` **全部零命中** |
+
+懒得自己搜就跑这个——它把上面每一条都做成了机械校验：
+
+```bash
+node tools/verify_privacy_claims.mjs
+```
+
+CI 里也在跑（见 `.github/workflows/tests.yml`），**如果哪天有人加了一行联网代码，构建会直接红。**
 
 **不是"我们不收集你的数据"，是它在技术上收集不了。**
 
