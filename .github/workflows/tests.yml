@@ -1,0 +1,29 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 设定 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: 跑全部测试
+        run: |
+          set -e
+          node tests/selftest_weight.mjs
+          node tests/selftest.mjs
+          node tests/smoke_pool.mjs
+          node tests/invariant_pool.mjs
+          node tests/sim_pool_v10.mjs
+
+      - name: 校验隐私主张（零网络 / 零外部资源）
+        run: node tools/verify_privacy_claims.mjs
