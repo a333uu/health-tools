@@ -5,8 +5,6 @@
 **两个不需要账号、不需要联网、不需要安装的健康记录工具。**
 **下载一个 HTML 文件，双击就能用。**
 
-[![tests](https://github.com/a333uu/health-tools/actions/workflows/tests.yml/badge.svg)](https://github.com/a333uu/health-tools/actions/workflows/tests.yml)
-
 </div>
 
 <!-- 截图占位：发布时替换为真实截图
