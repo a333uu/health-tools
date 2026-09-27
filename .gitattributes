@@ -1,0 +1,7 @@
+# 统一按 LF 存档，避免 Windows 上的 CRLF 转换污染历史
+* text=auto eol=lf
+
+# 这两个是应用本体：任何情况下都按文本处理，别让 Git 猜
+*.html text eol=lf
+*.mjs  text eol=lf
+*.md   text eol=lf

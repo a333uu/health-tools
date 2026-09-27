@@ -1,0 +1,20 @@
+﻿# 编辑器 / 系统
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini
+*.log
+*.tmp
+*~
+
+# 个人数据与运行产物（绝不入库）
+Saved/
+Design/
+node_modules/
+*.tgz
+
+# 本地服务脚本（仅作者本机使用）
+serve.mjs
+service.ps1
+_run_hidden.vbs
+*.bat

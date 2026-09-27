@@ -1,0 +1,33 @@
+﻿MIT License
+
+Copyright (c) 2026 Health Tools contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+## 使用者须知（非许可条款，仅为说明）
+
+本软件是**记录与解读工具，不是医疗建议来源**。任何数值都不构成处方。
+
+- 内置的"安全下限"（女性 1200 / 男性 1500 kcal）依据**通用膳食指南**设定，
+  **具体应该吃多少请咨询医生或注册营养师**。
+- 本软件不能替代医疗诊断、治疗或专业指导。
+  如果你有进食障碍史、慢性病或正在服药，请先咨询医生再使用。
+- 作者按 MIT 条款提供本软件，**不对任何健康后果承担责任**。

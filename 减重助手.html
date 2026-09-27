@@ -1,0 +1,1574 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#3a6ea5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="减重助手">
+<meta name="format-detection" content="telephone=no">
+<title>减重助手 · 记录与趋势</title>
+<style>
+:root{
+  --bg:#f3f5f7; --card:#fff; --card2:#f7f9fb; --text:#161a1d; --muted:#66727c;
+  --line:#dfe5ea; --accent:#3a6ea5; --accent-ink:#fff; --accent-soft:#e6eef7;
+  --up:#b3261e; --up-soft:#fceceb; --down:#2f7a5e; --down-soft:#e4f2ec;
+  --warn:#9a5b06; --warn-soft:#fdf0dd;
+  --shadow:0 1px 2px rgba(16,32,48,.06),0 6px 18px rgba(16,32,48,.06);
+  --r:14px; --tap:52px;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#111517; --card:#1a2024; --card2:#202830; --text:#e9eef2; --muted:#95a3ae;
+    --line:#2b353c; --accent:#6fa8dc; --accent-ink:#0c1418; --accent-soft:#1c2a36;
+    --up:#f08a80; --up-soft:#331f1d; --down:#63c2a4; --down-soft:#1a2f28;
+    --warn:#e0a458; --warn-soft:#33281a;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.35);
+  }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Source Han Sans SC","Noto Sans CJK SC",system-ui,sans-serif;
+  font-size:16px;line-height:1.5;-webkit-text-size-adjust:100%;overscroll-behavior-y:none;
+}
+button,input,select,textarea{font-family:inherit;font-size:16px;color:inherit}
+button{cursor:pointer;border:none;background:none}
+h1,h2,h3,h4,p{margin:0}
+ul{margin:0;padding:0;list-style:none}
+.hidden{display:none !important}
+
+#app{max-width:720px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+.topbar{
+  position:sticky;top:0;z-index:30;background:var(--card);border-bottom:1px solid var(--line);
+  padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;display:flex;align-items:center;gap:12px;
+}
+.brand{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
+.brand .logo{font-size:26px;line-height:1}
+.brand h1{font-size:19px;font-weight:700;letter-spacing:.3px}
+.brand .sub{font-size:13px;color:var(--muted);margin-top:1px}
+main{flex:1;padding:14px 14px 24px;padding-bottom:calc(24px + 76px + env(safe-area-inset-bottom))}
+.view{display:none;animation:fade .18s ease}
+.view.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+.tabbar{
+  position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--card);
+  border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom);
+  box-shadow:0 -2px 14px rgba(16,32,48,.05);
+}
+.tabbar .inner{display:flex;width:100%;max-width:720px;margin:0 auto}
+.tabbar button{
+  flex:1;min-height:60px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;color:var(--muted);font-size:12px;font-weight:600;padding:8px 2px;transition:color .15s;
+}
+.tabbar button .ti{font-size:20px;line-height:1}
+.tabbar button.on{color:var(--accent)}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:14px;margin-bottom:12px}
+.card.tight{padding:0;overflow:hidden}
+.sec-title{font-size:13px;font-weight:700;color:var(--muted);letter-spacing:.6px;margin:18px 2px 8px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.sec-title:first-child{margin-top:2px}
+.row{display:flex;align-items:center;gap:10px}
+.between{justify-content:space-between}
+.wrap{flex-wrap:wrap}
+.grow{flex:1;min-width:0}
+.muted{color:var(--muted)}
+.small{font-size:13px}.tiny{font-size:12px}
+.center{text-align:center}
+.mt8{margin-top:8px}.mt12{margin-top:12px}.mt16{margin-top:16px}
+.mb8{margin-bottom:8px}.mb12{margin-bottom:12px}
+.ellipsis{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.btn{min-height:var(--tap);padding:0 18px;border-radius:12px;background:var(--accent);color:var(--accent-ink);
+  font-weight:700;font-size:16px;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .08s,opacity .15s}
+.btn:active{transform:scale(.975);opacity:.9}
+.btn.block{display:flex;width:100%}
+.btn.ghost{background:var(--card2);color:var(--text);border:1px solid var(--line)}
+.btn.soft{background:var(--accent-soft);color:var(--accent)}
+.btn.danger{background:var(--up-soft);color:var(--up)}
+.btn.sm{min-height:42px;padding:0 14px;font-size:14px;border-radius:10px}
+.icon-btn{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+  font-size:22px;background:var(--card2);border:1px solid var(--line);flex:none}
+.icon-btn:active{transform:scale(.94)}
+
+.chip{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:999px;
+  background:var(--card2);border:1px solid var(--line);font-size:13px;font-weight:600;white-space:nowrap}
+.chip.ok{background:var(--down-soft);color:var(--down);border-color:transparent}
+.chip.warn{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.chip.accent{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+
+.field{margin-bottom:14px}
+.field > label{display:block;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:6px}
+.field .hint{font-size:12px;color:var(--muted);margin-top:5px;line-height:1.45}
+input[type=text],input[type=number],input[type=date],select,textarea{
+  width:100%;min-height:var(--tap);padding:12px 13px;border-radius:11px;border:1px solid var(--line);
+  background:var(--card2);color:var(--text);outline:none;transition:border-color .15s,box-shadow .15s}
+textarea{min-height:76px;resize:vertical;line-height:1.5}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* 主指标卡 */
+.hero{text-align:center;padding:20px 14px;border-radius:var(--r);border:1px solid var(--line);
+  background:linear-gradient(160deg,var(--accent-soft),var(--card))}
+.hero .n{font-size:46px;font-weight:800;letter-spacing:-1.5px;line-height:1.05;font-variant-numeric:tabular-nums}
+.hero .u{font-size:18px;font-weight:700;margin-left:4px;color:var(--muted)}
+.hero .cap{font-size:13px;color:var(--muted);margin-top:6px}
+.hero .dir{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:6px 14px;border-radius:999px;
+  font-size:14px;font-weight:700}
+.dir.down{background:var(--down-soft);color:var(--down)}
+.dir.flat{background:var(--card2);color:var(--muted)}
+.dir.up{background:var(--warn-soft);color:var(--warn)}
+
+/* 打卡行 */
+.logrow{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.logrow:last-child{border-bottom:none}
+.logrow .lb{flex:1;min-width:0}
+.logrow .lb .t{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.logrow .lb .h{font-size:12px;color:var(--muted);margin-top:2px}
+/* 输入宽度对 number 与 text 一视同仁（2026-09-27 修：只写 number 时，
+   文本框型字段「昨晚几点睡」拿不到宽度限制、默认约 173px，把标签挤成一列竖排） */
+.logrow input[type=number],.logrow input[type=text]{width:110px;min-height:46px;text-align:center;font-weight:700;font-size:17px;flex:none}
+.stepper{display:flex;align-items:center;gap:0;border:1px solid var(--line);border-radius:11px;overflow:hidden;background:var(--card2)}
+.stepper button{width:46px;height:46px;font-size:22px;font-weight:700;color:var(--accent)}
+.stepper .v{min-width:56px;text-align:center;font-weight:800;font-size:17px;font-variant-numeric:tabular-nums}
+.seg2{display:flex;gap:6px}
+.seg2 button{min-height:46px;padding:0 14px;border-radius:11px;border:1px solid var(--line);
+  background:var(--card2);font-size:14px;font-weight:600;color:var(--muted)}
+.seg2 button.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+
+/* 反馈条 */
+.fb{border-radius:12px;padding:13px 14px;font-size:14px;line-height:1.6;margin-bottom:12px;border:1px solid transparent}
+.fb.good{background:var(--down-soft);color:var(--down)}
+.fb.calm{background:var(--card2);color:var(--text);border-color:var(--line)}
+.fb.info{background:var(--accent-soft);color:var(--accent)}
+.fb b{font-weight:800}
+
+.empty{text-align:center;padding:38px 18px;color:var(--muted)}
+.empty .e{font-size:44px;margin-bottom:10px}
+.empty .t{font-weight:700;color:var(--text);margin-bottom:6px;font-size:16px}
+.note{background:var(--warn-soft);border-radius:11px;padding:11px 13px;font-size:13px;line-height:1.6;color:var(--warn)}
+.note.info{background:var(--accent-soft);color:var(--accent)}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
+.kv:last-child{border-bottom:none}
+.kv .k{color:var(--muted)}
+.kv .v{font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+
+.bar{height:10px;border-radius:6px;background:var(--card2);overflow:hidden}
+.bar > i{display:block;height:100%;background:var(--accent);border-radius:6px;transition:width .4s}
+
+.badge{display:flex;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line);align-items:center}
+.badge:last-child{border-bottom:none}
+.badge .ic{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+  font-size:22px;background:var(--card2);flex:none}
+.badge.got .ic{background:var(--accent-soft)}
+.badge .tx{flex:1;min-width:0}
+.badge .tx .t{font-weight:700;font-size:15px}
+.badge .tx .d{font-size:12px;color:var(--muted);margin-top:2px}
+.badge.locked{opacity:.5}
+
+.nsv{padding:11px 14px;border-bottom:1px solid var(--line);font-size:14px}
+.nsv:last-child{border-bottom:none}
+.nsv .d{font-size:12px;color:var(--muted);margin-top:3px}
+
+.chart{width:100%;height:220px;display:block}
+details.help{border:1px solid var(--line);border-radius:12px;margin-bottom:10px;background:var(--card);overflow:hidden}
+details.help summary{padding:14px;font-weight:700;font-size:15px;cursor:pointer;list-style:none;
+  display:flex;align-items:center;gap:8px;min-height:var(--tap)}
+details.help summary::-webkit-details-marker{display:none}
+details.help summary::after{content:"▾";margin-left:auto;color:var(--muted);transition:transform .2s}
+details.help[open] summary::after{transform:rotate(180deg)}
+details.help .c{padding:0 14px 14px;font-size:14px;line-height:1.75;color:var(--muted)}
+details.help .c b{color:var(--text)}
+details.help .c ol{padding-left:20px;list-style:revert;margin:6px 0}
+details.help .c li{margin-bottom:5px}
+#toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translate(-50%,14px);
+  background:#20211f;color:#fff;padding:11px 18px;border-radius:999px;font-size:14px;font-weight:600;
+  opacity:0;pointer-events:none;transition:all .22s;z-index:80;max-width:86vw;text-align:center}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+@media (max-width:360px){ .hero .n{font-size:38px} .logrow input[type=number],.logrow input[type=text]{width:88px} }
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">⚖️</span>
+      <div class="grow">
+        <h1>减重助手</h1>
+        <div class="sub" id="todayLabel">—</div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="view on" id="view-today"></section>
+    <section class="view" id="view-pool"></section>
+    <section class="view" id="view-trend"></section>
+    <section class="view" id="view-achieve"></section>
+    <section class="view" id="view-me"></section>
+  </main>
+
+  <nav class="tabbar">
+    <div class="inner">
+      <button class="on" data-tab="today"><span class="ti">✍️</span><span>今日</span></button>
+      <button data-tab="pool"><span class="ti">🪙</span><span>定投</span></button>
+      <button data-tab="trend"><span class="ti">📈</span><span>趋势</span></button>
+      <button data-tab="achieve"><span class="ti">🏅</span><span>成就</span></button>
+      <button data-tab="me"><span class="ti">⚙️</span><span>我的</span></button>
+    </div>
+  </nav>
+</div>
+
+<div class="sheet-wrap hidden" id="dlgWrap" style="position:fixed;inset:0;z-index:60;background:rgba(10,18,15,.45);display:flex;align-items:flex-end;justify-content:center">
+  <div style="width:100%;max-width:720px;background:var(--card);border-radius:18px 18px 0 0;max-height:92vh;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;gap:10px;padding:14px;border-bottom:1px solid var(--line)">
+      <h3 id="dlgTitle" style="font-size:17px;font-weight:800;flex:1">提示</h3>
+    </div>
+    <div id="dlgBody" style="overflow-y:auto;padding:16px 14px"></div>
+    <div id="dlgFoot" style="padding:12px 14px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line);display:flex;gap:10px"></div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+"use strict";
+/* ============================================================
+   减重助手 —— 单文件离线应用
+   设计依据：health-skills 库（weight-loss-coach / health-app-design /
+             health-measurement-protocol）
+   数据全部存在本机浏览器，不联网、不上传
+   ============================================================ */
+
+/* ===================== 1. 状态 ===================== */
+const STORE_KEY = "weight_coach_v1";
+const WEEK_CN = ["日", "一", "二", "三", "四", "五", "六"];
+
+function defaultState() {
+  return {
+    v: 1,
+    profile: {
+      sex: "f", birthYear: 1990, height: 165,
+      startWeight: null, targetWeight: null, activity: 1.375,
+      waistPos: "mid", waistLocked: false
+    },
+    daily: {},   // "YYYY-MM-DD" -> {w, steps, water, sleep, protein}
+    waist: {},   // "YYYY-MM-DD" -> cm
+    nsv: [],     // [{d, t}]
+    settings: { firstRun: true, lastFeedback: null },
+    uiDate: ""
+  };
+}
+let state = loadState();
+
+function loadState() {
+  const base = defaultState();
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (!raw) return base;
+    const o = JSON.parse(raw);
+    return {
+      v: 1,
+      profile: Object.assign(base.profile, o.profile || {}),
+      daily: o.daily && typeof o.daily === "object" ? o.daily : {},
+      waist: o.waist && typeof o.waist === "object" ? o.waist : {},
+      nsv: Array.isArray(o.nsv) ? o.nsv : [],
+      settings: Object.assign(base.settings, o.settings || {}),
+      uiDate: o.uiDate || ""
+    };
+  } catch (e) { return base; }
+}
+function saveState() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
+  catch (e) { toast("存不进去了：本机存储空间不足"); }
+}
+
+/* ===================== 2. 工具 ===================== */
+const $ = (s, r) => (r || document).querySelector(s);
+const pad2 = n => (n < 10 ? "0" + n : "" + n);
+function todayStr() { const d = new Date(); return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()); }
+function parseD(s) { const p = String(s || "").split("-"); return new Date(+p[0], (+p[1] || 1) - 1, +p[2] || 1); }
+function fmtD(d) { return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()); }
+function addDays(s, n) { const d = parseD(s); d.setDate(d.getDate() + n); return fmtD(d); }
+function diffDays(a, b) { const A = parseD(a), B = parseD(b); A.setHours(0,0,0,0); B.setHours(0,0,0,0); return Math.round((B - A) / 86400000); }
+function weekdayOf(s) { return WEEK_CN[parseD(s).getDay()]; }
+function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+function num(v) { const n = parseFloat(v); return isNaN(n) ? 0 : n; }
+function n1(v) { return String(Math.round(num(v) * 10) / 10); }
+function n2(v) { return String(Math.round(num(v) * 100) / 100); }
+function dateLabel(s) {
+  const d = diffDays(todayStr(), s);
+  if (d === 0) return "今天";
+  if (d === -1) return "昨天";
+  if (d === 1) return "明天";
+  return s.slice(5).replace("-", "/");
+}
+function toast(msg, ms) {
+  const el = $("#toast"); el.textContent = msg; el.classList.add("on");
+  clearTimeout(toast._t); toast._t = setTimeout(() => el.classList.remove("on"), ms || 2000);
+}
+function confirmDlg(title, msg, onOk, okText) {
+  $("#dlgTitle").textContent = title;
+  $("#dlgBody").innerHTML = '<div style="font-size:15px;line-height:1.7">' + msg + "</div>";
+  $("#dlgFoot").innerHTML = '<button class="btn ghost" data-act="dlgclose">取消</button>' +
+    '<button class="btn danger" data-act="dlgok">' + esc(okText || "确定") + "</button>";
+  $("#dlgWrap").classList.remove("hidden");
+  $("#dlgWrap")._onOk = onOk;
+}
+function closeDlg() { $("#dlgWrap").classList.add("hidden"); }
+
+/* ===================== 3. 计算引擎 ===================== */
+/* 中位数（空数组返回 null）。用于 7 日体重：中位数比平均值更抗离群点——
+   单日水分/盐分造成的 1-2 kg 尖峰只会影响平均值，不会影响中位数。
+   用户 2026-09-27 指令：「把七日平均体重改成七日中位数，这样可以更加排除干扰」。 */
+function median(arr) {
+  if (!arr || !arr.length) return null;
+  const s = arr.slice().sort((a, b) => a - b);
+  const m = Math.floor(s.length / 2);
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+}
+/* 最近 7 天记录值（缺测日跳过，不插值） */
+function last7(dateStr) {
+  const pts = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = addDays(dateStr, -i);
+    const e = state.daily[d];
+    if (e && e.w != null && e.w !== "") pts.push(num(e.w));
+  }
+  return pts;
+}
+/* 体重的 7 日中位数（缺测日跳过，不插值） */
+function w7(dateStr) { return median(last7(dateStr)); }
+/* 前一个 7 日窗口的中位数，用于算趋势方向 */
+function w7Prev(dateStr) {
+  const pts = [];
+  for (let i = 13; i >= 7; i--) {
+    const d = addDays(dateStr, -i);
+    const e = state.daily[d];
+    if (e && e.w != null && e.w !== "") pts.push(num(e.w));
+  }
+  return median(pts);
+}
+/* 趋势方向：下降 / 持平 / 上升（阈值 ±0.2kg 视为持平） */
+function trendDir(dateStr) {
+  const cur = w7(dateStr), prev = w7Prev(dateStr);
+  if (cur == null) return { dir: "none", delta: null, cur: null };
+  if (prev == null) return { dir: "first", delta: null, cur: cur };
+  const d = cur - prev;
+  let dir = "flat";
+  if (d < -0.2) dir = "down";
+  else if (d > 0.2) dir = "up";
+  return { dir: dir, delta: d, cur: cur, prev: prev };
+}
+/* 最近一次体重（不限今天） */
+function lastWeightBefore(dateStr) {
+  for (let i = 1; i <= 30; i++) {
+    const d = addDays(dateStr, -i);
+    const e = state.daily[d];
+    if (e && e.w != null && e.w !== "") return { d: d, w: num(e.w) };
+  }
+  return null;
+}
+/* 腰高比 */
+function whtr(waistCm) {
+  const h = num(state.profile.height);
+  if (!h || !waistCm) return null;
+  return waistCm / h;
+}
+function latestWaist() {
+  const ks = Object.keys(state.waist).sort();
+  if (!ks.length) return null;
+  const k = ks[ks.length - 1];
+  return { d: k, cm: num(state.waist[k]) };
+}
+function waist30dAgo() {
+  const ks = Object.keys(state.waist).sort();
+  const cutoff = addDays(todayStr(), -30);
+  const older = ks.filter(k => k <= cutoff);
+  if (!older.length) return null;
+  const k = older[older.length - 1];
+  return { d: k, cm: num(state.waist[k]) };
+}
+/* 是否到了量腰围的日子（距上次 >= 7 天） */
+function waistDue() {
+  const lw = latestWaist();
+  if (!lw) return true;
+  return diffDays(lw.d, todayStr()) >= 7;
+}
+/* BMR / TDEE（Mifflin-St Jeor） */
+function bmr() {
+  const p = state.profile;
+  const w = w7(todayStr()) || num(p.startWeight);
+  const h = num(p.height);
+  const age = p.birthYear ? (new Date().getFullYear() - num(p.birthYear)) : 0;
+  if (!w || !h || !age) return null;
+  const base = 10 * w + 6.25 * h - 5 * age;
+  return p.sex === "m" ? base + 5 : base - 161;
+}
+function tdee() { const b = bmr(); return b ? b * num(state.profile.activity || 1.375) : null; }
+function kcalFloor() { return state.profile.sex === "m" ? 1500 : 1200; }
+
+/* 连续记录天数（宽容式：每周允许断 1 天不断链） */
+function streak() {
+  let count = 0, missedThisWeek = 0;
+  for (let i = 0; i < 400; i++) {
+    const d = addDays(todayStr(), -i);
+    const e = state.daily[d];
+    const has = e && (e.w != null && e.w !== "" || e.steps || e.water || e.sleep);
+    if (has) { count++; }
+    else {
+      if (i === 0) continue;                 // 今天还没记，不算断
+      missedThisWeek++;
+      if (missedThisWeek > 1) break;          // 本周已断 1 天以上 → 链到此为止
+    }
+    if (diffDays(d, todayStr()) % 7 === 0 && i > 0) missedThisWeek = 0;  // 每周重置宽容量
+  }
+  return count;
+}
+function totalRecordDays() { return Object.keys(state.daily).length; }
+function waistChange30() {
+  const a = waist30dAgo(), b = latestWaist();
+  if (!a || !b || a.d === b.d) return null;
+  return { delta: b.cm - a.cm, from: a, to: b };
+}
+/* 距目标进度 */
+function goalProgress() {
+  const p = state.profile;
+  const start = num(p.startWeight), target = num(p.targetWeight);
+  const cur = w7(todayStr());
+  if (!start || !target || cur == null || start === target) return null;
+  const total = start - target;
+  const done = start - cur;
+  let pct = total > 0 ? (done / total) * 100 : 0;
+  pct = Math.max(0, Math.min(100, pct));
+  return { start: start, target: target, cur: cur, total: total, done: done, pct: pct, left: cur - target };
+}
+/* ===================== 4. 正反馈引擎 =====================
+   依据 health-app-design §2/§3.4：
+   - 庆祝行为，不庆祝结果
+   - 上升时先给解释，绝不出现"失败/倒退/超标/你只"
+   - 持平给中性表述，不报负面
+   全文案禁止词：失败 / 倒退 / 超标 / 你只 / 加油（空话）
+   ========================================================= */
+const FORBIDDEN = ["失败", "倒退", "超标", "你只"];
+
+function buildFeedback(dateStr) {
+  const e = state.daily[dateStr] || {};
+  const has = e.w != null && e.w !== "";
+  const t = trendDir(dateStr);
+  const st = streak();
+
+  /* 还没记录 */
+  if (!has && !e.steps && !e.water && !e.sleep) {
+    return { cls: "calm", html: "记一笔就好，<b>10 秒</b>的事。今天记了就断不了链。" };
+  }
+
+  /* 刚记录完：优先报行为 */
+  const parts = [];
+
+  /* 行为反馈（永远优先） */
+  if (st >= 2) parts.push("连续记录 <b>" + st + " 天</b>");
+
+  /* 结果反馈（有解释、有正向） */
+  if (has && t.dir === "down" && t.delta != null) {
+    return {
+      cls: "good",
+      html: "📉 7 日趋势在往下走（" + n2(Math.abs(t.delta)) + " kg）。" +
+            (parts.length ? parts.join("，") + "。" : "") + "这是真实进展，不是水分。"
+    };
+  }
+  if (has && t.dir === "up" && t.delta != null) {
+    return {
+      cls: "calm",
+      html: "体重比上周高 <b>" + n2(t.delta) + " kg</b>——多半是水分或盐分波动，不是长脂肪。" +
+            "看 <b>7 日趋势</b>更准，单日数字说明不了什么。" +
+            (waistDue() ? " 顺手量个腰围吧，它比体重诚实。" : "")
+    };
+  }
+  if (has && t.dir === "flat") {
+    return {
+      cls: "calm",
+      html: "趋势稳定。" + (waistDue() ? "体重不动的时候，<b>腰围</b>才是真相——该量腰围了。" : "稳定期很正常，继续记就好。") +
+            (parts.length ? "（" + parts.join("，") + "）" : "")
+    };
+  }
+  if (has && t.dir === "first") {
+    return { cls: "info", html: "第一次记录完成 ✓ 再记几天就能看出趋势了。" + (parts.length ? "（" + parts.join("，") + "）" : "") };
+  }
+
+  return { cls: "good", html: "今天记录完成 ✓ " + (parts.length ? parts.join("，") + "。" : "") + "记下来本身就是有效的事。" };
+}
+
+/* 校验反馈（禁止词自查——交付门的一部分） */
+function auditFeedbackText() {
+  const bad = [];
+  const samples = [];
+  for (let i = 0; i < 5; i++) samples.push(buildFeedback(addDays(todayStr(), -i)).html);
+  for (const s of samples) for (const w of FORBIDDEN) if (s.indexOf(w) >= 0) bad.push(w);
+  return bad;
+}
+
+/* ===================== 4.B 热量定投引擎 =====================
+   设计依据：tests/sim_pool_v10.mjs（15 轮数值复验的定稿）
+   机制：每日入池 = 计入缺口 × 健康乘数
+     ① 计入缺口：摄入 ≥ 安全下限时按原始缺口计入；低于下限则按 (摄入/下限)² 递减
+        —— 为什么必须这样：若缺口无上限地计入，极端节食者本金是温和者的 2.25 倍，
+           健康惩罚再重也压不过（本机 15 轮数值复验 + 4 次数学证明），机制会失效。
+           注：此处「失效」指机制达不到设计目的，与对用户的用词无关。
+     ② 健康指数：只由**行为**构成（睡眠/饮水/步数/记录完整度），**不含摄入**
+        —— 若把摄入算进指数，指数与缺口会在乘积里互相抵消，核心判据必然不成立。
+     ③ 健康乘数 g(H)=exp(−0.012×(100−H))：指数高 → 攒得快（良性循环）
+   数据全部来自本机 localStorage，不联网。 */
+
+const POOL = {
+  b: 0.012,        // 健康乘数敏感度
+  p: 2,            // 下限以下惩罚指数
+  neutral: 88      // 中性指数（乘数基准点）
+};
+
+/* ---- 健康科目注册表 ----
+   用户可以自己勾选要跟踪的科目：**没勾的科目不参与健康指数，也不扣分**。
+   依据：用户 2026-09-27 指令「这些健康指数可以由用户自己勾选想要的科目，未勾选不计入扣分」。
+   权重依据 `weight-loss-coach` §6「有证据支撑的行为杠杆」+ `health-measurement-protocol` §1 噪声表。 */
+const SUBJECTS = [
+  { id: "sleep",    field: "sleep",    label: "睡眠时长", hint: "大概几小时就行",       w: 40 },
+  { id: "water",    field: "water",    label: "饮水",     hint: "数杯子，不用算毫升",   w: 30 },
+  { id: "steps",    field: "steps",    label: "步数",     hint: "从手机健康里抄一个",   w: 30 },
+  { id: "protein",  field: "protein",  label: "蛋白质",   hint: "肉蛋奶豆，二选一就行", w: 25,
+    options: [{ v: true, label: "够了", score: 100 }, { v: false, label: "没够", score: 40 }] },
+  { id: "regular",  field: "bedtime",  label: "就寝规律", hint: "填入睡时刻，看近 3 天", w: 30 },
+  { id: "weigh",    field: "w",        label: "每天称重", hint: "早上空腹称最准",       w: 25 },
+  { id: "liquid",   field: "liquid",   label: "液体热量", hint: "含糖饮料、奶茶、果汁", w: 25,
+    options: [{ v: true, label: "没喝", score: 100 }, { v: false, label: "喝了", score: 45 }] },
+  { id: "veg",      field: "veg",      label: "蔬菜纤维", hint: "蔬菜、粗粮、豆类",     w: 25,
+    options: [{ v: true, label: "吃够", score: 100 }, { v: false, label: "没够", score: 50 }] },
+  { id: "alcohol",  field: "alcohol",  label: "饮酒",     hint: "影响睡眠与热量",       w: 20,
+    options: [{ v: false, label: "没喝", score: 100 }, { v: true, label: "喝了", score: 50 }] },
+  { id: "unwind",   field: "unwind",   label: "放松活动", hint: "散步、冥想、早点收工", w: 20,
+    options: [{ v: true, label: "做了", score: 100 }, { v: false, label: "没做", score: 50 }] }
+];
+const DEFAULT_SUBJECTS = ["sleep", "water", "steps", "protein", "regular", "weigh"];
+
+/* 二选一/多选一科目的取值 → 显示标签 */
+function optionLabel(field, v) {
+  const s = SUBJECTS.find(x => x.field === field);
+  if (!s || !s.options) return "";
+  const o = s.options.find(x => String(x.v) === String(v));
+  return o ? o.label : "";
+}
+/* 二选一/多选一科目的取值 → 分数 */
+function optionScore(field, v) {
+  const s = SUBJECTS.find(x => x.field === field);
+  if (!s || !s.options) return null;
+  const o = s.options.find(x => String(x.v) === String(v));
+  return o ? o.score : null;
+}
+
+function enabledSubjectIds() {
+  const s = state.settings && state.settings.subjects;
+  return Array.isArray(s) ? s : DEFAULT_SUBJECTS.slice();
+}
+function enabledSubjects() {
+  const ids = enabledSubjectIds();
+  return SUBJECTS.filter(x => ids.indexOf(x.id) >= 0);
+}
+function hasField(e, f) {
+  const v = e[f];
+  return v != null && v !== "";
+}
+function isOnId(id) { return enabledSubjectIds().indexOf(id) >= 0; }
+
+/* 睡眠分（5h→0，8h→100） */
+function sleepScore(h) {
+  const v = num(h);
+  if (h == null || h === "") return null;
+  return Math.max(0, Math.min(100, (v - 5) / 3 * 100));
+}
+/* 饮水分（500ml→0，2000ml→100） */
+function waterScore(ml) {
+  const v = num(ml) * 250;   // 打卡按"杯"记，1 杯 ≈ 250ml
+  if (ml == null || ml === "") return null;
+  return Math.max(0, Math.min(100, (v - 500) / 1500 * 100));
+}
+/* 步数分（2000→0，8000→100） */
+function stepsScore(s) {
+  const v = num(s);
+  if (s == null || s === "") return null;
+  return Math.max(0, Math.min(100, (v - 2000) / 6000 * 100));
+}
+
+/* 行为覆盖率 0-1：已勾选科目里记了几项。
+   用途：缺测时**按比例缩减**，而不是"缺测=满分"（否则只记体重+热量的人会白拿高分）。
+   ⚠️ 只统计**用户已勾选**的科目——未勾选的科目既不扣分，也不允许间接加分
+   （2026-09-27 实测：覆盖率若统计未勾选科目，只勾睡眠的人随手填个步数就会白涨分）。 */
+function behaviorCoverage(e) {
+  const on = enabledSubjects().filter(s => s.id !== "log");
+  if (!on.length) return 1;
+  return on.filter(s => hasField(e, s.field)).length / on.length;
+}
+
+/* 蛋白质分已统一走 optionScore("protein", v)（见 SUBJECTS 注册表的 options） */
+
+/* 入睡时刻规范化：允许用户少按冒号（"2330"→"23:30"、"23"→"23:00"） */
+function normClock(str) {
+  let raw = String(str == null ? "" : str).trim().replace(/[：:.\s]/g, "");
+  if (/^\d{3}$/.test(raw)) raw = "0" + raw;
+  if (/^\d{4}$/.test(raw)) raw = raw.slice(0, 2) + ":" + raw.slice(2);
+  else if (/^\d{1,2}$/.test(raw)) raw = raw + ":00";
+  return raw;
+}
+/* 时间工具（就寝规律性用；处理跨午夜环绕） */
+function clockHour(str) {
+  const m = String(str == null ? "" : str).trim().match(/^(\d{1,2})\s*[:：]\s*(\d{1,2})$/);
+  if (!m) return null;
+  const hh = +m[1], mm = +m[2];
+  if (hh > 23 || mm > 59) return null;
+  return hh + mm / 60;
+}
+/* 入睡时刻 → 距"凌晨 3 点"的距离（小时，0-12），这样 23:00 与 01:00 相邻而不相差 22 小时 */
+function clockDist(hour, ref) {
+  let d = Math.abs(hour - ref);
+  return Math.min(d, 24 - d);
+}
+/* 就寝规律性 0-100：近 3 天入睡时刻的离散度。
+   0 小时偏差 → 100；2 小时偏差 → 0。偏差越大分越低。 */
+function sleepRegularityScore(date) {
+  const hrs = [];
+  for (let i = 0; i < 3; i++) {
+    const e = state.daily[addDays(date, -i)] || {};
+    const h = clockHour(e.bedtime);
+    if (h != null) hrs.push(h);
+  }
+  if (hrs.length < 2) return null;                 // 不足 2 天算不出来（不计入，不扣分）
+  const ref = 3;                                    // 以凌晨 3 点为参照（多数人入睡集中在它两侧）
+  const ds = hrs.map(h => clockDist(h, ref));
+  const mean = ds.reduce((a, b) => a + b, 0) / ds.length;
+  const sd = Math.sqrt(ds.reduce((a, b) => a + (b - mean) * (b - mean), 0) / ds.length);
+  return Math.round(Math.max(0, Math.min(100, 100 - sd / 2 * 100)));
+}
+
+/* 当日健康指数 0-100（只由行为构成；只算用户已勾选的科目）
+   = 中性值 × (0.45 + 0.55 × 科目质量) × 已勾选科目的记录覆盖率
+   科目质量 = 已勾选科目的加权平均分（某项当天没数据则不计入分母）
+   覆盖率   = 已勾选科目里记了几项 / 勾了几项（缺测按比例缩减，不白送满分）
+   ⚠️ 不引入"记录完整度"这类**与科目列表无关**的项——否则未勾选的科目会间接加分，
+      违反"未勾选不参与"（2026-09-27 实测踩到过：只勾睡眠时随手填个步数就会白涨分）。 */
+function healthIndex(date) {
+  const e = state.daily[date] || {};
+  const val = {
+    sleep: sleepScore(e.sleep),
+    water: waterScore(e.water),
+    steps: stepsScore(e.steps),
+    protein: optionScore("protein", e.protein),
+    regular: sleepRegularityScore(date),
+    weigh: hasField(e, "w") ? 100 : null,
+    liquid: optionScore("liquid", e.liquid),
+    veg: optionScore("veg", e.veg),
+    alcohol: optionScore("alcohol", e.alcohol),
+    unwind: optionScore("unwind", e.unwind)
+  };
+  const on = enabledSubjects();
+  if (!on.length) return POOL.neutral;              // 一个科目都没勾 → 中性，不奖不罚
+  let got = 0, w = 0;
+  for (const s of on) {
+    const v = val[s.id];
+    if (v != null) { got += v * s.w; w += s.w; }
+  }
+  const habit = w ? got / w : 0;                    // 该科目当天没数据 → 分子分母都不加
+  const cov = behaviorCoverage(e);
+  const h = POOL.neutral * (0.45 + 0.55 * habit / 100) * cov;
+  return Math.round(Math.max(30, Math.min(100, h)));
+}
+
+/* 健康乘数 */
+function healthFactor(h) { return Math.exp(-POOL.b * (100 - h)); }
+
+/* 计入缺口 = 安全缺口 × min(1, 缺口/安全缺口) × min(1, 摄入/下限)
+   第一项：缺口没到安全缺口时按实际缺口计入；到了就不再增加（饱和）。
+   第二项：摄入低于安全下限时线性递减（少百分之多少就乘 1−百分之多少）。
+   两项都是摄入的单调不减函数 ⇒ 乘积也是 ⇒ 「吃更少绝不多入池」是构造保证。
+   维持量（缺口 0）时第一项为 0 ⇒ 不投入就不入池。 */
+function countedDeficit(intake, tdee, floor) {
+  const D = Math.max(0, tdee - intake), C = Math.max(0, tdee - floor);
+  if (D < 1) return 0;                    // 缺口 <1 kcal 视同维持量（避免浮点残留出 0.08 这种数）
+  if (C <= 0) return D;
+  return C * Math.min(1, D / C) * Math.max(0, Math.min(1, intake / floor));
+}
+
+/* 某日定投明细 */
+function poolDay(date) {
+  const e = state.daily[date] || {};
+  const tdeeV = tdee(), floor = kcalFloor();
+  const h = healthIndex(date);
+  const g = healthFactor(h);
+  const out = { date: date, tdee: tdeeV, floor: floor, health: h, g: g, intake: null, deficit: 0, counted: 0, deposit: 0, over: false };
+  if (!tdeeV || e.intake == null || e.intake === "") return out;
+  out.intake = num(e.intake);
+  out.over = out.intake < floor;                   // 低于安全下限：提示而非指责
+  out.deficit = Math.max(0, tdeeV - out.intake);
+  out.counted = countedDeficit(out.intake, tdeeV, floor);
+  out.deposit = out.counted * g;
+  return out;
+}
+
+/* 定投池累计（从最早记录日累计到 date；池子恒增，缺口≥0 时永不缩水） */
+function poolTotal(date) {
+  const days = Object.keys(state.daily).filter(d => d <= date && state.daily[d].intake != null && state.daily[d].intake !== "").sort();
+  let total = 0, n = 0, last = null;
+  for (const d of days) { const p = poolDay(d); total += p.deposit; n++; last = d; }
+  return { total: total, days: n, last: last };
+}
+
+/* 最近 N 天的定投走势（缺测日不计入，不插值） */
+function poolSeries(n) {
+  const out = [];
+  for (let i = n - 1; i >= 0; i--) {
+    const d = addDays(todayStr(), -i);
+    const e = state.daily[d];
+    if (e && e.intake != null && e.intake !== "") out.push(poolDay(d));
+  }
+  return out;
+}
+
+/* ===================== 5. 渲染：今日 ===================== */
+function renderToday() {
+  const date = state.uiDate || todayStr();
+  const e = state.daily[date] || {};
+  const t = trendDir(date);
+  const v = $("#view-today");
+  let h = "";
+
+  /* ---- 主指标卡：一个数字 ---- */
+  if (t.cur != null) {
+    const dirCls = t.dir === "down" ? "down" : (t.dir === "up" ? "up" : "flat");
+    const dirTxt = t.dir === "down" ? "↓ 近 7 日 " + n2(Math.abs(t.delta || 0)) + " kg"
+      : (t.dir === "up" ? "↑ 近 7 日 " + n2(t.delta || 0) + " kg"
+      : (t.dir === "first" ? "刚开始记录" : "→ 稳定"));
+    h += '<div class="hero mb12"><div><span class="n">' + n1(t.cur) + '</span><span class="u">kg</span></div>' +
+         '<div class="cap">7 日中位数（不是今天那一次）</div>' +
+         '<div class="dir ' + dirCls + '">' + dirTxt + '</div></div>';
+  } else {
+    h += '<div class="hero mb12"><div><span class="n">—</span><span class="u">kg</span></div>' +
+         '<div class="cap">记一次体重就能开始看趋势</div></div>';
+  }
+
+  /* ---- 反馈条 ---- */
+  const fb = buildFeedback(date);
+  h += '<div class="fb ' + fb.cls + '">' + fb.html + '</div>';
+
+  /* ---- 打卡区（只显示已勾选的科目；未勾选的不出现、也不扣分） ---- */
+  const last = lastWeightBefore(date);
+  const onIds = enabledSubjectIds();
+  const isOn = id => onIds.indexOf(id) >= 0;
+  h += '<div class="sec-title"><span>今天记一笔</span><span class="muted tiny">不想记就跳过，没关系</span></div>';
+  h += '<div class="card tight">';
+
+  /* 体重（「每天称重」科目） */
+  if (isOn("weigh")) {
+    h += '<div class="logrow"><div class="lb"><div class="t">体重</div>' +
+         '<div class="h">' + (last ? "上次 " + dateLabel(last.d) + " " + n1(last.w) + " kg" : "早上空腹称最准") + '</div></div>' +
+         '<input type="number" inputmode="decimal" step="0.1" min="20" max="300" placeholder="kg" ' +
+         'id="in-w" data-field="w" data-date="' + date + '" value="' + (e.w != null && e.w !== "" ? esc(e.w) : "") + '">' +
+         (last ? '<button class="btn sm ghost" data-act="samew" data-date="' + date + '" data-w="' + last.w + '">一样</button>' : "") +
+         '</div>';
+  }
+
+  /* 步数 */
+  if (isOn("steps")) {
+    h += '<div class="logrow"><div class="lb"><div class="t">步数</div><div class="h">从手机健康里抄一个</div></div>' +
+         '<input type="number" inputmode="numeric" step="100" min="0" placeholder="步" ' +
+         'data-field="steps" data-date="' + date + '" value="' + (e.steps != null && e.steps !== "" ? esc(e.steps) : "") + '"></div>';
+  }
+
+  /* 饮水 */
+  if (isOn("water")) {
+    const water = num(e.water);
+    h += '<div class="logrow"><div class="lb"><div class="t">饮水</div><div class="h">数杯子，不用算毫升</div></div>' +
+         '<div class="stepper"><button data-act="water" data-date="' + date + '" data-d="-1">−</button>' +
+         '<span class="v" id="waterV">' + water + '</span>' +
+         '<button data-act="water" data-date="' + date + '" data-d="1">＋</button></div></div>';
+  }
+
+  /* 睡眠时长 */
+  if (isOn("sleep")) {
+    h += '<div class="logrow"><div class="lb"><div class="t">睡眠</div><div class="h">大概几小时就行</div></div>' +
+         '<input type="number" inputmode="decimal" step="0.5" min="0" max="24" placeholder="小时" ' +
+         'data-field="sleep" data-date="' + date + '" value="' + (e.sleep != null && e.sleep !== "" ? esc(e.sleep) : "") + '"></div>';
+  }
+
+  /* 就寝时刻（「就寝规律」科目）—— 只看近 3 天的离散度 */
+  if (isOn("regular")) {
+    const reg = sleepRegularityScore(date);
+    h += '<div class="logrow"><div class="lb"><div class="t">昨晚几点睡</div>' +
+         '<div class="h">' + (reg == null ? "填两天以上才看得出规律" : "近 3 天规律度 " + reg + " 分") + '</div></div>' +
+         '<input type="text" inputmode="numeric" placeholder="23:30" maxlength="5" ' +
+         'data-field="bedtime" data-date="' + date + '" value="' + (e.bedtime != null ? esc(e.bedtime) : "") + '"></div>';
+  }
+
+  /* 二选一科目（蛋白质 / 液体热量 / 蔬菜纤维 / 饮酒 / 放松活动）——统一渲染 */
+  for (const s of SUBJECTS) {
+    if (!s.options || !isOn(s.id)) continue;
+    let btns = "";
+    for (const o of s.options) {
+      const on = e[s.field] != null && String(e[s.field]) === String(o.v);
+      btns += '<button class="' + (on ? "on" : "") + '" data-act="opt" data-field="' + s.field +
+              '" data-date="' + date + '" data-v="' + String(o.v) + '">' + esc(o.label) + '</button>';
+    }
+    h += '<div class="logrow"><div class="lb"><div class="t">' + esc(s.label) + '</div>' +
+         '<div class="h">' + esc(s.hint) + '</div></div><div class="seg2">' + btns + '</div></div>';
+  }
+
+  /* 热量摄入（定投的入口，始终显示——没它就没有定投） */
+  h += '<div class="logrow"><div class="lb"><div class="t">今天吃了多少热量</div>' +
+       '<div class="h">你自己算好一个总数就行（kcal）</div></div>' +
+       '<input type="number" inputmode="numeric" step="10" min="0" max="8000" placeholder="kcal" ' +
+       'data-field="intake" data-date="' + date + '" value="' + (e.intake != null && e.intake !== "" ? esc(e.intake) : "") + '"></div>';
+
+  if (!onIds.length) {
+    h += '<div class="logrow"><div class="lb"><div class="t muted">还没勾选健康科目</div>' +
+         '<div class="h">去「我的 → 健康科目」勾几个，健康指数才会动</div></div>' +
+         '<button class="btn sm soft" data-act="gome">去勾选</button></div>';
+  }
+
+  h += '</div>';
+
+  /* ---- 定投池（填了热量才出现） ---- */
+  const pd = poolDay(date);
+  if (pd.intake != null) {
+    const tot = poolTotal(date);
+    h += '<div class="sec-title"><span>今天的热量定投</span><span class="muted tiny">点这里看池子</span></div>';
+    h += '<div class="card">' +
+         '<div class="row" style="align-items:baseline"><div class="grow">' +
+         '<div class="tiny muted">今日入池</div>' +
+         '<div style="font-size:26px;font-weight:800;font-variant-numeric:tabular-nums">+' + n1(pd.deposit) + '</div>' +
+         '</div><div style="text-align:right">' +
+         '<div class="tiny muted">定投池累计</div>' +
+         '<div style="font-size:20px;font-weight:800;font-variant-numeric:tabular-nums">' + n1(tot.total) + '</div>' +
+         '</div></div>' +
+         '<div class="tiny muted mt8">健康指数 ' + pd.health + ' → 倍率 ' + n2(pd.g) +
+         '｜当日缺口 ' + Math.round(pd.deficit) + ' kcal（计入 ' + Math.round(pd.counted) + '）</div>' +
+         (pd.over ? '<div class="note mt8">今天低于安全下限（' + pd.floor + ' kcal）。' +
+           '低于它的部分不会再增加入池——安全下限是按通用指南设的，具体该吃多少请咨询医生或营养师。</div>' : "") +
+         '</div>';
+  }
+
+  /* ---- 腰围提醒（到期才出现） ---- */
+  if (waistDue()) {
+    const lw = latestWaist();
+    h += '<div class="note mt12">📏 <b>该量腰围了</b>' +
+         (lw ? '（上次 ' + dateLabel(lw.d) + '：' + n1(lw.cm) + ' cm）' : '（还没量过）') +
+         '<div class="mt8"><button class="btn sm soft" data-act="waistform">现在量一次</button> ' +
+         '<button class="btn sm ghost" data-act="waisthow">怎么量</button></div></div>';
+  }
+
+  /* ---- 小胜利 ---- */
+  h += '<div class="sec-title"><span>今天的小胜利</span><span class="muted tiny">和体重无关的进步</span></div>';
+  h += '<div class="card"><div class="row"><input type="text" id="nsvIn" placeholder="例如：裤子松了一格 / 爬楼不喘了">' +
+       '<button class="btn sm soft" data-act="addnsv">记下</button></div>' +
+       '<div class="tiny muted mt8">这些不算体重，但都是真的进步。记下来以后回头看很有用。</div></div>';
+
+  v.innerHTML = h;
+}
+
+/* ===================== 5.B 渲染：定投 ===================== */
+function renderPool() {
+  const v = $("#view-pool");
+  const date = state.uiDate || todayStr();
+  const tot = poolTotal(date);
+  const pd = poolDay(date);
+  let h = "";
+
+  /* ---- 主指标：池子总额 ---- */
+  h += '<div class="hero mb12"><div><span class="n">' + n1(tot.total) + '</span><span class="u">点</span></div>' +
+       '<div class="cap">热量定投池（累计' + tot.days + ' 天）</div>' +
+       '<div class="dir flat">每天攒一点，健康指数高就攒得快</div></div>';
+
+  if (!tot.days) {
+    h += '<div class="card"><div style="font-size:14px;line-height:1.8">' +
+         '在「今日」页填一次<b>当天吃了多少热量</b>，定投就开始了。<br>' +
+         '程序不替你估算食物热量——你自己算好一个总数就行。</div></div>';
+    v.innerHTML = h;
+    return;
+  }
+
+  /* ---- 今日明细 ---- */
+  h += '<div class="sec-title"><span>今天这一笔</span><span class="muted tiny">' + esc(dateLabel(date)) + '</span></div>';
+  h += '<div class="card">';
+  if (pd.intake == null) {
+    h += '<div style="font-size:14px;line-height:1.8">今天还没填热量。' +
+         '<button class="btn sm soft" data-act="gotoday" style="margin-left:6px">去填</button></div>';
+  } else {
+    h += '<div class="row" style="align-items:baseline"><div class="grow">' +
+         '<div class="tiny muted">今日入池</div>' +
+         '<div style="font-size:26px;font-weight:800;font-variant-numeric:tabular-nums">+' + n1(pd.deposit) + '</div>' +
+         '</div><div style="text-align:right"><div class="tiny muted">池子累计</div>' +
+         '<div style="font-size:20px;font-weight:800;font-variant-numeric:tabular-nums">' + n1(tot.total) + '</div></div></div>';
+    h += '<div class="mt12" style="font-size:13px;line-height:2">' +
+         '<div>今日消耗（TDEE）　<b>' + Math.round(pd.tdee) + '</b> kcal</div>' +
+         '<div>今日摄入　　　　　<b>' + Math.round(pd.intake) + '</b> kcal</div>' +
+         '<div>热量缺口　　　　　<b>' + Math.round(pd.deficit) + '</b> kcal</div>' +
+         '<div>计入池子的缺口　　<b>' + Math.round(pd.counted) + '</b> kcal</div>' +
+         '<div>健康指数　　　　　<b>' + pd.health + '</b> ／ 100</div>' +
+         '<div>健康倍率　　　　　<b>' + n2(pd.g) + '</b> ×</div>' +
+         '</div>';
+    if (pd.over) {
+      h += '<div class="note mt12">今天低于安全下限（' + pd.floor + ' kcal）。' +
+           '低于它的部分不会再增加入池——这样极端节食拿不到额外好处。' +
+           '安全下限是按通用指南设的，具体该吃多少请咨询医生或营养师。</div>';
+    } else if (pd.counted < pd.deficit - 1) {
+      h += '<div class="note info mt12">缺口里有 ' + Math.round(pd.deficit - pd.counted) +
+           ' kcal 没有计入池子——因为缺口已经超过了一份健康的量。再少吃不会攒得更快。</div>';
+    }
+  }
+  h += '</div>';
+
+  /* ---- 健康指数怎么来的（解释性反馈：让用户看懂倍率） ---- */
+  const e = state.daily[date] || {};
+  h += '<div class="sec-title"><span>健康指数怎么来的</span><span class="muted tiny">只看行为，不看体重</span></div>';
+  h += '<div class="card">';
+  const reg = sleepRegularityScore(date);
+  const rows = [];
+  if (isOnId("sleep"))   rows.push(["睡眠", e.sleep != null && e.sleep !== "" ? n1(e.sleep) + " 小时" : "—", sleepScore(e.sleep)]);
+  if (isOnId("regular")) rows.push(["就寝规律", reg == null ? "不足 2 天" : "近 3 天", reg]);
+  if (isOnId("water"))   rows.push(["饮水", e.water != null && e.water !== "" ? num(e.water) + " 杯" : "—", waterScore(e.water)]);
+  if (isOnId("steps"))   rows.push(["步数", e.steps != null && e.steps !== "" ? num(e.steps) + " 步" : "—", stepsScore(e.steps)]);
+  if (isOnId("protein")) rows.push(["蛋白质", e.protein == null ? "—" : optionLabel("protein", e.protein), optionScore("protein", e.protein)]);
+  if (isOnId("liquid"))  rows.push(["液体热量", e.liquid == null ? "—" : optionLabel("liquid", e.liquid), optionScore("liquid", e.liquid)]);
+  if (isOnId("veg"))     rows.push(["蔬菜纤维", e.veg == null ? "—" : optionLabel("veg", e.veg), optionScore("veg", e.veg)]);
+  if (isOnId("alcohol")) rows.push(["饮酒", e.alcohol == null ? "—" : optionLabel("alcohol", e.alcohol), optionScore("alcohol", e.alcohol)]);
+  if (isOnId("unwind"))  rows.push(["放松活动", e.unwind == null ? "—" : optionLabel("unwind", e.unwind), optionScore("unwind", e.unwind)]);
+  if (isOnId("weigh"))   rows.push(["称重", hasField(e, "w") ? "已称" : "—", hasField(e, "w") ? 100 : null]);
+  rows.push(["记录覆盖", Math.round(behaviorCoverage(e) * 100) + "%", behaviorCoverage(e) * 100]);
+  for (const [name, val, sc] of rows) {
+    const pct = sc == null ? 0 : Math.round(sc);
+    h += '<div class="row" style="align-items:center;padding:6px 0">' +
+         '<div style="width:88px;font-size:13px;font-weight:700">' + name + '</div>' +
+         '<div class="grow" style="background:var(--line);border-radius:6px;height:8px;overflow:hidden">' +
+         '<div style="width:' + pct + '%;height:100%;background:var(--accent);border-radius:6px"></div></div>' +
+         '<div style="width:74px;text-align:right;font-size:12px;color:var(--muted)">' + esc(val) + '</div>' +
+         '</div>';
+  }
+  const offList = SUBJECTS.filter(s => !isOnId(s.id)).map(s => s.label);
+  h += '<div class="tiny muted mt8">健康指数只由这些行为决定。睡眠、饮水、步数越好，倍率越高，同样的缺口攒得越快。' +
+       (offList.length ? '<br>未勾选（不参与、不扣分）：' + esc(offList.join("、")) : "") + '</div>';
+  h += '</div>';
+
+  /* ---- 最近 14 天入池（缺测日不画，不插值） ---- */
+  const ser = poolSeries(14);
+  if (ser.length) {
+    const mx = Math.max.apply(null, ser.map(p => p.deposit)) || 1;
+    h += '<div class="sec-title"><span>最近两周的入池</span><span class="muted tiny">每天一根</span></div>';
+    h += '<div class="card"><div style="display:flex;align-items:flex-end;gap:3px;height:110px">';
+    for (const p of ser) {
+      const hh = Math.max(2, Math.round(p.deposit / mx * 100));
+      h += '<div class="grow" title="' + esc(p.date) + '" style="display:flex;flex-direction:column;justify-content:flex-end;height:100%">' +
+           '<div style="height:' + hh + '%;background:var(--accent);border-radius:4px 4px 0 0;min-height:3px"></div>' +
+           '</div>';
+    }
+    h += '</div><div class="tiny muted mt8">柱子高低 = 当天入池额（缺口 × 健康倍率）。' +
+         '缺的那几天是没填热量，不是零分。</div></div>';
+  }
+
+  /* ---- 规则说明（可折叠） ---- */
+  h += '<div class="sec-title"><span>定投是怎么算的</span><span class="muted tiny">想懂再看</span></div>';
+  h += '<div class="card"><div style="font-size:13px;line-height:1.9">' +
+       '<div>① <b>缺口</b> = 你的每日消耗（TDEE）− 你填的摄入</div>' +
+       '<div>② 缺口里<b>超过一份健康量的部分不计入池子</b>——所以极端节食拿不到额外好处</div>' +
+       '<div>③ <b>健康指数</b>（睡眠 / 饮水 / 步数 / 记录完整度）决定倍率</div>' +
+       '<div>④ <b>入池 = 计入缺口 × 健康倍率</b>，池子只增不减</div>' +
+       '<div class="tiny muted mt8">这个机制经 15 轮数值复验才定稿：早先的「利率随健康指数浮动」在数学上压不过极端节食的本金优势，会反过来奖励极端节食。</div>' +
+       '</div></div>';
+
+  v.innerHTML = h;
+}
+
+/* ===================== 6. 渲染：趋势 ===================== */
+function svgChart(days) {
+  const W = 320, H = 200, PL = 34, PR = 10, PT = 12, PB = 22;
+  const pts = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const d = addDays(todayStr(), -i);
+    const e = state.daily[d];
+    const raw = (e && e.w != null && e.w !== "") ? num(e.w) : null;
+    pts.push({ d: d, raw: raw, ma: w7(d) });
+  }
+  const vals = [];
+  pts.forEach(p => { if (p.raw != null) vals.push(p.raw); if (p.ma != null) vals.push(p.ma); });
+  const tgt = num(state.profile.targetWeight);
+  if (tgt) vals.push(tgt);
+  if (!vals.length) return '<div class="empty small">还没有数据</div>';
+
+  let lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
+  const pad = Math.max(0.6, (hi - lo) * 0.15);
+  lo -= pad; hi += pad;
+  const X = i => PL + (i / Math.max(1, days - 1)) * (W - PL - PR);
+  const Y = v => PT + (1 - (v - lo) / Math.max(0.001, hi - lo)) * (H - PT - PB);
+
+  let s = '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none">';
+  /* 网格 + 刻度 */
+  for (let g = 0; g <= 4; g++) {
+    const val = lo + (hi - lo) * (g / 4);
+    const y = Y(val);
+    s += '<line x1="' + PL + '" y1="' + y.toFixed(1) + '" x2="' + (W - PR) + '" y2="' + y.toFixed(1) + '" stroke="currentColor" stroke-opacity="0.10" stroke-width="1"/>';
+    s += '<text x="' + (PL - 4) + '" y="' + (y + 3).toFixed(1) + '" font-size="9" fill="currentColor" fill-opacity="0.5" text-anchor="end">' + n1(val) + '</text>';
+  }
+  /* 目标线 */
+  if (tgt) {
+    const y = Y(tgt);
+    s += '<line x1="' + PL + '" y1="' + y.toFixed(1) + '" x2="' + (W - PR) + '" y2="' + y.toFixed(1) + '" stroke="#3a6ea5" stroke-width="1.5" stroke-dasharray="5 4"/>';
+    s += '<text x="' + (W - PR) + '" y="' + (y - 4).toFixed(1) + '" font-size="9" fill="#3a6ea5" text-anchor="end">目标 ' + n1(tgt) + '</text>';
+  }
+  /* 原始点（浅，断线：缺测不连） */
+  let seg = [];
+  const flushRaw = () => {
+    if (seg.length > 1) s += '<polyline fill="none" stroke="currentColor" stroke-opacity="0.28" stroke-width="1.5" points="' + seg.join(" ") + '"/>';
+    seg = [];
+  };
+  pts.forEach((p, i) => { if (p.raw == null) flushRaw(); else seg.push(X(i).toFixed(1) + "," + Y(p.raw).toFixed(1)); });
+  flushRaw();
+  /* 7 日均线（深，断线） */
+  seg = [];
+  const flushMa = () => {
+    if (seg.length > 1) s += '<polyline fill="none" stroke="#3a6ea5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="' + seg.join(" ") + '"/>';
+    seg = [];
+  };
+  pts.forEach((p, i) => { if (p.ma == null) flushMa(); else seg.push(X(i).toFixed(1) + "," + Y(p.ma).toFixed(1)); });
+  flushMa();
+  s += '</svg>';
+  s += '<div class="row between tiny muted mt8"><span>' + days + ' 天前</span>' +
+       '<span><span style="display:inline-block;width:16px;height:2.5px;background:#3a6ea5;vertical-align:middle"></span> 7 日中位数　' +
+       '<span style="display:inline-block;width:16px;height:2px;background:currentColor;opacity:.3;vertical-align:middle"></span> 每次记录</span>' +
+       '<span>今天</span></div>';
+  return s;
+}
+
+function renderTrend() {
+  const v = $("#view-trend");
+  const t = trendDir(todayStr());
+  const gp = goalProgress();
+  const wc = waistChange30();
+  let h = "";
+
+  h += '<div class="sec-title"><span>体重趋势（30 天）</span></div>';
+  h += '<div class="card">' + svgChart(30) + '</div>';
+
+  h += '<div class="sec-title"><span>进展</span></div>';
+  h += '<div class="card">';
+  if (gp) {
+    h += '<div class="row between mb8"><div class="muted small">距目标</div>' +
+         '<div><b style="font-size:20px">' + n1(Math.abs(gp.left)) + '</b><span class="muted"> kg</span></div></div>' +
+         '<div class="bar"><i style="width:' + gp.pct.toFixed(0) + '%"></i></div>' +
+         '<div class="tiny muted mt8">已完成 ' + gp.pct.toFixed(0) + '%　起点 ' + n1(gp.start) + ' → 目标 ' + n1(gp.target) + ' kg</div>';
+  } else {
+    h += '<div class="small muted">在「我的」里填上起始体重和目标体重，这里会显示进度。</div>';
+  }
+  h += '</div>';
+
+  /* 腰围 */
+  h += '<div class="sec-title"><span>腰围（月度对比）</span><span class="muted tiny">比体重诚实</span></div>';
+  h += '<div class="card">';
+  const lw = latestWaist();
+  if (lw) {
+    const r = whtr(lw.cm);
+    h += '<div class="row between mb8"><div class="muted small">最新（' + dateLabel(lw.d) + '）</div>' +
+         '<div><b style="font-size:20px">' + n1(lw.cm) + '</b><span class="muted"> cm</span></div></div>';
+    if (r != null) {
+      const ok = r < 0.5;
+      h += '<div class="kv"><span class="k">腰高比（腰围÷身高）</span><span class="v">' + n2(r) +
+           ' <span class="chip ' + (ok ? "ok" : "warn") + '">' + (ok ? "✓ 健康区" : "偏大") + '</span></span></div>';
+      h += '<div class="tiny muted mt8">目标 <b>&lt; 0.5</b>，也就是「腰围不超过身高的一半」。</div>';
+    }
+    if (wc) {
+      const d = wc.delta;
+      h += '<div class="kv mt8"><span class="k">近 30 天变化</span><span class="v" style="color:' +
+           (d < 0 ? "var(--down)" : "var(--muted)") + '">' + (d < 0 ? "↓ " : (d > 0 ? "↑ " : "")) + n1(Math.abs(d)) + ' cm</span></div>';
+      if (d < 0) h += '<div class="tiny mt8" style="color:var(--down)">腰围在降——这是实打实的脂肪减少。</div>';
+    }
+  } else {
+    h += '<div class="small muted">还没量过腰围。体重不动的时候，腰围是唯一能证明进步的东西。</div>';
+  }
+  h += '</div>';
+
+  h += '<div class="note info mt12">图上的深色线是 <b>7 日中位数</b>——单日体重会因水分、盐分、生理期上下浮动 1-2 kg，中位数把这种单日尖峰直接排除掉，那条线才是真实方向。</div>';
+  v.innerHTML = h;
+}
+/* ===================== 7. 渲染：成就 ===================== */
+function renderAchieve() {
+  const v = $("#view-achieve");
+  const st = streak();
+  const total = totalRecordDays();
+  const wc = waistChange30();
+  const gp = goalProgress();
+  const nsvCount = state.nsv.length;
+
+  /* 里程碑定义：行为优先，结果并列 */
+  const badges = [
+    { ic: "🌱", t: "第一次记录", d: "开始了就赢了一半", got: total >= 1 },
+    { ic: "🔥", t: "连续 3 天", d: "习惯正在形成", got: st >= 3 },
+    { ic: "📅", t: "连续 7 天", d: "一周不断链", got: st >= 7 },
+    { ic: "💪", t: "连续 21 天", d: "21 天是习惯的门槛", got: st >= 21 },
+    { ic: "🏔", t: "连续 50 天", d: "这已经是生活方式了", got: st >= 50 },
+    { ic: "📏", t: "第一次量腰围", d: "你选了更诚实的指标", got: Object.keys(state.waist).length >= 1 },
+    { ic: "📐", t: "腰围 -2 cm", d: "实打实的脂肪减少", got: wc ? wc.delta <= -2 : false },
+    { ic: "✍️", t: "记录满 30 天", d: "累计 30 天有记录", got: total >= 30 },
+    { ic: "🎯", t: "达成目标 25%", d: "四分之一了", got: gp ? gp.pct >= 25 : false },
+    { ic: "🏆", t: "达成目标 100%", d: "到达目标体重", got: gp ? gp.pct >= 100 : false }
+  ];
+  const gotN = badges.filter(b => b.got).length;
+
+  let h = "";
+  h += '<div class="hero mb12"><div><span class="n">' + st + '</span><span class="u">天</span></div>' +
+       '<div class="cap">连续记录（每周允许断 1 天不断链）</div></div>';
+
+  h += '<div class="card">' +
+       '<div class="kv"><span class="k">累计记录天数</span><span class="v">' + total + ' 天</span></div>' +
+       '<div class="kv"><span class="k">腰围记录次数</span><span class="v">' + Object.keys(state.waist).length + ' 次</span></div>' +
+       '<div class="kv"><span class="k">记下的小胜利</span><span class="v">' + nsvCount + ' 条</span></div>' +
+       '<div class="kv"><span class="k">已获得徽章</span><span class="v">' + gotN + ' / ' + badges.length + '</span></div>' +
+       '</div>';
+
+  h += '<div class="sec-title"><span>徽章</span><span class="muted tiny">行为优先</span></div>';
+  h += '<div class="card tight">';
+  for (const b of badges) {
+    h += '<div class="badge ' + (b.got ? "got" : "locked") + '"><div class="ic">' + (b.got ? b.ic : "🔒") + '</div>' +
+         '<div class="tx"><div class="t">' + esc(b.t) + '</div><div class="d">' + esc(b.d) + '</div></div>' +
+         (b.got ? '<span class="chip ok">已获得</span>' : '<span class="chip">未达成</span>') + '</div>';
+  }
+  h += '</div>';
+
+  h += '<div class="sec-title"><span>我的小胜利</span><span class="muted tiny">和体重无关的进步</span></div>';
+  h += '<div class="card tight">';
+  if (!state.nsv.length) {
+    h += '<div class="empty" style="padding:26px 18px"><div class="e">✨</div>' +
+         '<div class="t">还没有记录</div><div class="small">在「今日」页写下第一条——<br>裤子松了、爬楼不喘、睡得香，都算。</div></div>';
+  } else {
+    const arr = state.nsv.slice().sort((a, b) => (a.d < b.d ? 1 : -1));
+    for (const n of arr) {
+      h += '<div class="nsv"><div>' + esc(n.t) + '</div><div class="d">' + esc(n.d) +
+           ' <button class="btn sm ghost" style="min-height:28px;padding:0 8px;font-size:12px" data-act="delnsv" data-d="' + esc(n.d) + '" data-t="' + esc(n.t) + '">删除</button></div></div>';
+    }
+  }
+  h += '</div>';
+  h += '<div class="note info mt12">徽章大多挂在<b>行为</b>上（记录、量腰围），不是挂在体重上——因为体重你控制不了，行为你能。把反馈挂在能控制的事上，才永远有赢的机会。</div>';
+  v.innerHTML = h;
+}
+
+/* ===================== 8. 渲染：我的 ===================== */
+function renderMe() {
+  const p = state.profile;
+  const v = $("#view-me");
+  const b = bmr(), t = tdee();
+  const lw = latestWaist();
+  let h = "";
+
+  h += '<div class="sec-title"><span>身体资料</span></div>';
+  h += '<div class="card">';
+  h += '<div class="grid2">' +
+       '<div class="field"><label>性别</label><select data-field="sex">' +
+       '<option value="f"' + (p.sex === "f" ? " selected" : "") + '>女</option>' +
+       '<option value="m"' + (p.sex === "m" ? " selected" : "") + '>男</option></select></div>' +
+       '<div class="field"><label>出生年份</label><input type="number" inputmode="numeric" min="1920" max="2020" data-field="birthYear" value="' + esc(p.birthYear) + '"></div>' +
+       '</div>';
+  h += '<div class="grid2">' +
+       '<div class="field"><label>身高（cm）</label><input type="number" inputmode="decimal" step="0.5" min="100" max="230" data-field="height" value="' + esc(p.height) + '"></div>' +
+       '<div class="field"><label>活动量</label><select data-field="activity">' +
+       '<option value="1.2"' + (num(p.activity) === 1.2 ? " selected" : "") + '>久坐（几乎不运动）</option>' +
+       '<option value="1.375"' + (num(p.activity) === 1.375 ? " selected" : "") + '>轻度（每周 1-3 次）</option>' +
+       '<option value="1.55"' + (num(p.activity) === 1.55 ? " selected" : "") + '>中度（每周 3-5 次）</option>' +
+       '<option value="1.725"' + (num(p.activity) === 1.725 ? " selected" : "") + '>高度（每周 6-7 次）</option>' +
+       '</select></div></div>';
+  h += '<div class="grid2">' +
+       '<div class="field"><label>起始体重（kg）</label><input type="number" inputmode="decimal" step="0.1" data-field="startWeight" value="' + (p.startWeight != null ? esc(p.startWeight) : "") + '"></div>' +
+       '<div class="field"><label>目标体重（kg）</label><input type="number" inputmode="decimal" step="0.1" data-field="targetWeight" value="' + (p.targetWeight != null ? esc(p.targetWeight) : "") + '"></div>' +
+       '</div>';
+  h += '</div>';
+
+  /* 健康科目（用户自选：没勾的科目不计入健康指数，也不扣分） */
+  const onIds = enabledSubjectIds();
+  h += '<div class="sec-title"><span>健康科目</span><span class="muted tiny">勾你想跟踪的</span></div>';
+  h += '<div class="card">';
+  for (const s of SUBJECTS) {
+    const on = onIds.indexOf(s.id) >= 0;
+    h += '<div class="logrow" style="padding:8px 0"><div class="lb"><div class="t">' + esc(s.label) + '</div>' +
+         '<div class="h">' + esc(s.hint) + '</div></div>' +
+         '<button class="btn sm ' + (on ? "" : "ghost") + '" data-act="subject" data-sid="' + s.id + '">' +
+         (on ? "已勾选" : "未勾选") + '</button></div>';
+  }
+  h += '<div class="tiny muted mt8">没勾的科目<b>不参与健康指数，也不扣分</b>——' +
+       '健康指数只按你勾选的科目算。科目越少，指数越容易被单科拉动。</div>';
+  h += '</div>';
+
+  /* 热量预算 */
+  h += '<div class="sec-title"><span>热量预算（估算）</span></div>';
+  h += '<div class="card">';
+  if (b && t) {
+    h += '<div class="kv"><span class="k">基础代谢 BMR</span><span class="v">' + Math.round(b) + ' kcal</span></div>';
+    h += '<div class="kv"><span class="k">日常总消耗 TDEE</span><span class="v">' + Math.round(t) + ' kcal</span></div>';
+    const sug = Math.max(kcalFloor(), t - 500);
+    h += '<div class="kv"><span class="k">温和缺口参考</span><span class="v">' + Math.round(sug) + ' kcal</span></div>';
+    h += '<div class="tiny muted mt8">按 Mifflin-St Jeor 公式估算，<b>误差不小</b>，只是个起点。' +
+         '建议按这个跑两周，看趋势再调整——活动量那一项最容易高估。</div>';
+    if (sug <= kcalFloor()) {
+      h += '<div class="note mt8">算出来的值已经到下限（' + kcalFloor() + ' kcal）。' +
+           '<b>再低就需要医生监督了</b>，不建议自己往下压。</div>';
+    }
+  } else {
+    h += '<div class="small muted">填上性别、出生年份、身高和体重后，这里会估算热量预算。</div>';
+  }
+  h += '</div>';
+
+  /* 腰围位置 */
+  h += '<div class="sec-title"><span>腰围测量</span></div>';
+  h += '<div class="card">';
+  h += '<div class="kv"><span class="k">测量位置</span><span class="v">' +
+       (p.waistPos === "navel" ? "脐水平" : "肋骨下缘与髂骨中点") + '</span></div>';
+  if (lw) h += '<div class="kv"><span class="k">最近一次</span><span class="v">' + n1(lw.cm) + ' cm（' + esc(lw.d) + '）</span></div>';
+  h += '<div class="row wrap mt8">' +
+       (p.waistLocked ? '<button class="btn sm ghost" data-act="unlockwaist">解锁位置</button>' : '') +
+       '<button class="btn sm ghost" data-act="waisthow">查看测量规程</button>' +
+       '<button class="btn sm soft" data-act="waistform">记录腰围</button>' +
+       '</div>';
+  h += '<div class="tiny muted mt8">位置一旦锁定就不再提供「换个位置」——换位置造成的变化，比你想看到的进步还大。</div>';
+  h += '</div>';
+
+  /* 数据 */
+  h += '<div class="sec-title"><span>数据</span></div>';
+  h += '<div class="card"><div class="row wrap">' +
+       '<button class="btn sm ghost" data-act="export">导出备份</button>' +
+       '<button class="btn sm ghost" data-act="import">导入备份</button>' +
+       '<button class="btn sm danger" data-act="clearall">清空全部数据</button>' +
+       '</div><div class="tiny muted mt8">数据只存在这台设备的浏览器里，不上传。换设备或清理浏览器前记得导出。</div></div>';
+
+  /* 说明 */
+  h += '<div class="sec-title"><span>说明</span></div>';
+  h += helpBlock();
+  h += '<div class="note mt12">本程序只做<b>记录、计算、提醒</b>，不提供任何医疗建议。' +
+       '减重涉及个体差异（甲状腺、用药、代谢疾病等），具体方案请咨询医生或注册营养师。<br>' +
+       '如果你有进食障碍史（暴食、催吐、绝食），请勿使用本程序，并尽快就医。</div>';
+  v.innerHTML = h;
+}
+
+function helpBlock() {
+  return '' +
+  '<details class="help"><summary>📏 腰围怎么量（误差比体重还大，必须按规程）</summary><div class="c"><ol>' +
+  '<li><b>时间</b>：早上、空腹、排空膀胱后</li>' +
+  '<li><b>位置</b>：肋骨下缘与髂骨上缘的中点（或脐水平，二选一后永不改）</li>' +
+  '<li><b>姿态</b>：自然站立，双脚分开 25-30 cm，体重均匀分布</li>' +
+  '<li><b>呼吸</b>：自然呼气末（<b>不要屏气收腹</b>）</li>' +
+  '<li><b>尺子</b>：贴皮肤但不勒紧，与地面平行，读数到 0.1 cm</li>' +
+  '<li><b>频率</b>：每周 1 次，固定同一天（比如每周一早上）</li>' +
+  '</ol>为什么这么讲究：腰围单次测量误差有 <b>2-3 cm</b>，比你一个月想看到的进步还大。规程不固定，数据就是随机数。</div></details>' +
+
+  '<details class="help"><summary>📉 为什么首屏显示的是「7 日中位数」而不是今天的体重</summary><div class="c">' +
+  '单日体重里有 <b>1-2 kg 是水分、糖原、食物残渣、粪便</b>——吃咸了、生理期、没排便都能让它跳。' +
+  '这些跟脂肪<b>毫无关系</b>。<br><br>' +
+  '把单日数字做成"涨了/跌了"，等于用噪声惩罚你。所以首屏显示 7 日中位数，它才是真实方向。<br><br>' +
+  '<b>为什么用中位数而不是平均数</b>：平均数会被单日尖峰拉偏——某天多吃咸了涨 2 kg，' +
+  '接下来 7 天的平均数都会被这条弯线拖高。中位数只看"排中间的那个值"，' +
+  '<b>单日尖峰进不了中间位</b>，所以它比平均数更排除干扰。<br><br>' +
+  '<b>图上有两条线</b>：浅色是每次记录（真实但抖），深色是 7 日中位数（判断依据）。缺测的日子会断开，不连线——插值会造假趋势。</div></details>' +
+
+  '<details class="help"><summary>⚖️ 为什么腰围比体重更能说明问题</summary><div class="c">' +
+  '<ul style="padding-left:20px;list-style:revert">' +
+  '<li>体重包含肌肉、水分、糖原、食物残渣；腰围主要反映<b>腹部脂肪</b></li>' +
+  '<li>减脂同时增肌时，<b>体重可能完全不动</b>，但腰围会降</li>' +
+  '<li>腰围能反映<b>内脏脂肪</b>，而内脏脂肪对热量缺口响应较快</li>' +
+  '</ul>' +
+  '<b>腰高比 = 腰围 ÷ 身高</b>，目标 <b>&lt; 0.5</b>——"腰围不超过身高的一半"。' +
+  '这是目前公认最好的简易指标，比 BMI 更能预测代谢风险，而且不用查表。</div></details>' +
+
+  '<details class="help"><summary>🎯 为什么徽章挂在「记录天数」上而不是「减了多少」</summary><div class="c">' +
+  '体重你控制不了（水分、激素、代谢都在动），<b>记录你能控制</b>。<br><br>' +
+  '把反馈挂在结果上，你必然有输的一天；挂在行为上，你永远有赢的机会。<br><br>' +
+  '所以「连续记录 21 天」比「减了 3 斤」更值得庆祝——<b>结果是行为的副产品</b>。</div></details>' +
+
+  '<details class="help"><summary>😐 体重涨了怎么办</summary><div class="c">' +
+  '先看 <b>7 日趋势</b>，不要看单日。<br><br>' +
+  '如果趋势也涨了，先排查这四件事（按常见程度）：<ol>' +
+  '<li><b>吃咸了 / 碳水吃多了</b> → 水潴留，1-2 天自己退</li>' +
+  '<li><b>生理期</b> → 1-2 kg 正常，周期相关</li>' +
+  '<li><b>没排便</b> → 0.3-1 kg</li>' +
+  '<li><b>份量估算慢慢放宽了</b> → 这是最常见也最容易被忽略的真实原因</li>' +
+  '</ol>如果连续 3 周不动，那是平台期——先量腰围（可能在增肌），不要急着砍热量。</div></details>' +
+
+  '<details class="help"><summary>⚠️ 什么时候该停下来看医生</summary><div class="c">' +
+  '出现以下任一情况，<b>停止使用本程序并就医</b>：<ul style="padding-left:20px;list-style:revert">' +
+  '<li>每周掉超过体重的 2%，且连续两周</li>' +
+  '<li>出现暴食、催吐、绝食的念头或行为</li>' +
+  '<li>持续乏力、脱发、停经、怕冷</li>' +
+  '<li>体重在没刻意减的情况下持续下降</li>' +
+  '</ul>减重不该以健康为代价。程序里的热量下限（女 1200 / 男 1500 kcal）是警戒线，不是目标。</div></details>';
+}
+/* ===================== 9. 视图切换 ===================== */
+let curTab = "today";
+function switchTab(name) {
+  curTab = name;
+  document.querySelectorAll(".tabbar button").forEach(b => b.classList.toggle("on", b.getAttribute("data-tab") === name));
+  document.querySelectorAll(".view").forEach(s => s.classList.remove("on"));
+  const el = $("#view-" + name);
+  if (el) el.classList.add("on");
+  window.scrollTo(0, 0);
+  renderTab(name);
+}
+function renderTab(name) {
+  if (name === "today") renderToday();
+  else if (name === "pool") renderPool();
+  else if (name === "trend") renderTrend();
+  else if (name === "achieve") renderAchieve();
+  else if (name === "me") renderMe();
+}
+function renderAll() {
+  const d = state.uiDate || todayStr();
+  $("#todayLabel").textContent = dateLabel(d) + " · " + d + " 周" + weekdayOf(d);
+  renderTab(curTab);
+}
+
+/* ===================== 10. 写入辅助 ===================== */
+function ensureDay(date) {
+  if (!state.daily[date]) state.daily[date] = {};
+  return state.daily[date];
+}
+function setField(date, field, val) {
+  const e = ensureDay(date);
+  if (val === "" || val == null) delete e[field];
+  else e[field] = val;
+  if (!Object.keys(e).length) delete state.daily[date];
+  saveState();
+}
+
+/* ===================== 11. 腰围表单 ===================== */
+function openWaistForm() {
+  const p = state.profile;
+  const lw = latestWaist();
+  const posName = p.waistPos === "navel" ? "脐水平" : "肋骨下缘与髂骨中点";
+  $("#dlgTitle").textContent = "记录腰围";
+  $("#dlgBody").innerHTML =
+    '<div class="note mb12">按规程量：<b>早上 · 空腹 · 排空膀胱 · 自然呼气末 · 尺子不勒紧</b><br>' +
+    '位置固定为：<b>' + esc(posName) + '</b>' + (p.waistLocked ? "（已锁定）" : "") + '</div>' +
+    '<div class="field"><label>腰围（cm）</label>' +
+    '<input type="number" inputmode="decimal" step="0.1" min="30" max="200" id="waistIn" placeholder="例如 82.5" value="">' +
+    '<div class="hint">' + (lw ? '上次 ' + esc(lw.d) + '：' + n1(lw.cm) + ' cm' : '第一次记录') + '</div></div>' +
+    (p.waistLocked ? "" :
+      '<div class="field"><label>测量位置（选定后锁定，不可再改）</label><select id="waistPos">' +
+      '<option value="mid">肋骨下缘与髂骨上缘的中点</option>' +
+      '<option value="navel">脐水平</option></select></div>');
+  $("#dlgFoot").innerHTML = '<button class="btn ghost" data-act="dlgclose">取消</button>' +
+    '<button class="btn" data-act="savewaist">保存</button>';
+  $("#dlgWrap")._onOk = null;
+  $("#dlgWrap").classList.remove("hidden");
+}
+function saveWaist() {
+  const el = $("#waistIn");
+  const cm = num(el && el.value);
+  if (!cm || cm < 30 || cm > 200) { toast("请输入 30-200 之间的数字"); return; }
+  const ps = $("#waistPos");
+  if (ps && !state.profile.waistLocked) {
+    state.profile.waistPos = ps.value;
+    state.profile.waistLocked = true;
+  }
+  state.waist[todayStr()] = cm;
+  saveState(); closeDlg(); renderAll();
+  const wc = waistChange30();
+  if (wc && wc.delta < 0) toast("腰围降了 " + n1(Math.abs(wc.delta)) + " cm，这是真进步");
+  else toast("已记录 " + n1(cm) + " cm");
+}
+
+/* ===================== 12. 导出 / 导入 ===================== */
+function download(filename, text, mime) {
+  try {
+    const blob = new Blob([text], { type: (mime || "text/plain") + ";charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = filename; a.rel = "noopener";
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 4000);
+    return true;
+  } catch (e) { toast("导出没成功，换个浏览器试试"); return false; }
+}
+function doExport() {
+  download("减重助手备份_" + todayStr() + ".json", JSON.stringify(state, null, 2), "application/json");
+  toast("备份已导出");
+}
+function doImport() {
+  const inp = document.createElement("input");
+  inp.type = "file"; inp.accept = ".json,application/json";
+  inp.onchange = () => {
+    const f = inp.files && inp.files[0];
+    if (!f) return;
+    const fr = new FileReader();
+    fr.onload = () => {
+      try {
+        const o = JSON.parse(String(fr.result));
+        if (!o || !o.daily) throw new Error("bad");
+        confirmDlg("导入备份", "将用备份覆盖当前全部数据，确定吗？", () => {
+          state = {
+            v: 1,
+            profile: Object.assign(defaultState().profile, o.profile || {}),
+            daily: o.daily || {}, waist: o.waist || {},
+            nsv: Array.isArray(o.nsv) ? o.nsv : [],
+            settings: Object.assign(defaultState().settings, o.settings || {}),
+            uiDate: ""
+          };
+          saveState(); closeDlg(); renderAll(); toast("导入成功");
+        });
+      } catch (e) { toast("这个文件不是有效的备份"); }
+    };
+    fr.readAsText(f);
+  };
+  inp.click();
+}
+
+/* ===================== 13. 事件委托 ===================== */
+document.addEventListener("click", function (ev) {
+  const tabBtn = ev.target.closest(".tabbar button[data-tab]");
+  if (tabBtn) { switchTab(tabBtn.getAttribute("data-tab")); return; }
+  const t = ev.target.closest("[data-act]");
+  if (!t) return;
+  const act = t.getAttribute("data-act");
+  const date = t.getAttribute("data-date") || todayStr();
+
+  switch (act) {
+    case "samew": {
+      setField(date, "w", num(t.getAttribute("data-w")));
+      renderAll(); toast("已填上次的体重");
+      break;
+    }
+    case "water": {
+      const e = ensureDay(date);
+      const nv = Math.max(0, num(e.water) + num(t.getAttribute("data-d")));
+      setField(date, "water", nv || "");
+      renderAll();
+      break;
+    }
+    case "protein": {
+      setField(date, "protein", t.getAttribute("data-v") === "1");
+      renderAll();
+      break;
+    }
+    case "opt": {
+      /* 所有二选一科目统一入口（蛋白质/液体热量/蔬菜/饮酒/放松） */
+      const fld = t.getAttribute("data-field");
+      const raw = t.getAttribute("data-v");
+      setField(date, fld, raw === "true" ? true : (raw === "false" ? false : raw));
+      renderAll();
+      break;
+    }
+    case "gotoday": { switchTab("today"); break; }
+    case "gome": { switchTab("me"); break; }
+    case "subject": {
+      const sid = t.getAttribute("data-sid");
+      const cur = enabledSubjectIds().slice();
+      const i = cur.indexOf(sid);
+      if (i >= 0) cur.splice(i, 1); else cur.push(sid);
+      if (!state.settings) state.settings = {};
+      state.settings.subjects = cur;
+      saveState(); renderAll();
+      toast(i >= 0 ? "已取消勾选" : "已加入健康指数");
+      break;
+    }
+    case "waistform": openWaistForm(); break;
+    case "savewaist": saveWaist(); break;
+    case "waisthow": {
+      $("#dlgTitle").textContent = "腰围测量规程";
+      $("#dlgBody").innerHTML = '<div style="font-size:14px;line-height:1.8">' +
+        '<ol style="padding-left:20px"><li>时间：早上、空腹、排空膀胱后</li>' +
+        '<li>位置：<b>' + esc(state.profile.waistPos === "navel" ? "脐水平" : "肋骨下缘与髂骨上缘的中点") + '</b>（已固定）</li>' +
+        '<li>姿态：自然站立，双脚分开 25-30 cm，体重均匀分布</li>' +
+        '<li>呼吸：自然呼气末（<b>不要屏气收腹</b>）</li>' +
+        '<li>尺子：贴皮肤但不勒紧，与地面平行，读数到 0.1 cm</li>' +
+        '<li>频率：每周 1 次，固定同一天</li></ol>' +
+        '<div class="note mt12">单次测量误差有 <b>2-3 cm</b>，比你一个月想看到的进步还大。规程不固定，数据就是随机数。</div></div>';
+      $("#dlgFoot").innerHTML = '<button class="btn" data-act="dlgclose">知道了</button>';
+      $("#dlgWrap")._onOk = null;
+      $("#dlgWrap").classList.remove("hidden");
+      break;
+    }
+    case "addnsv": {
+      const el = $("#nsvIn");
+      const txt = el ? el.value.trim() : "";
+      if (!txt) { toast("写一句再记"); break; }
+      state.nsv.push({ d: todayStr(), t: txt });
+      saveState(); renderAll(); toast("记下了 ✓");
+      break;
+    }
+    case "delnsv": {
+      const d = t.getAttribute("data-d"), tx = t.getAttribute("data-t");
+      state.nsv = state.nsv.filter(n => !(n.d === d && n.t === tx));
+      saveState(); renderAchieve(); toast("已删除");
+      break;
+    }
+    case "unlockwaist":
+      confirmDlg("解锁测量位置", "解锁后可以改位置，但<b>换位置造成的变化会大于真实进步</b>，会让之前的数据失去可比性。<br>确定要解锁吗？", () => {
+        state.profile.waistLocked = false; saveState(); closeDlg(); renderMe();
+      }, "解锁");
+      break;
+    case "export": doExport(); break;
+    case "import": doImport(); break;
+    case "clearall":
+      confirmDlg("清空全部数据", "将删除所有记录（体重、腰围、小胜利），无法恢复。<br>建议先「导出备份」。确定吗？", () => {
+        state = defaultState(); state.profile.waistLocked = false;
+        saveState(); closeDlg(); renderAll(); toast("已清空");
+      }, "全部清空");
+      break;
+    case "dlgclose": closeDlg(); break;
+    case "dlgok": {
+      const fn = $("#dlgWrap")._onOk;
+      if (typeof fn === "function") fn();
+      break;
+    }
+  }
+});
+
+/* 数值/下拉字段：change 时写入（值最终化） */
+document.addEventListener("change", function (ev) {
+  const el = ev.target;
+  const f = el.getAttribute && el.getAttribute("data-field");
+  if (!f) return;
+  const date = el.getAttribute("data-date") || todayStr();
+  if (f === "sex" || f === "activity" || f === "birthYear" || f === "height" ||
+      f === "startWeight" || f === "targetWeight") {
+    const v = (f === "sex" || f === "activity") ? el.value : (el.value === "" ? "" : num(el.value));
+    if (v === "") delete state.profile[f]; else state.profile[f] = (f === "sex") ? v : (f === "activity" ? num(v) : v);
+    saveState(); renderAll();
+    return;
+  }
+  /* 就寝时刻是文本（HH:MM），按原样存；顺手补冒号（输 2330 → 23:30，少按一个键） */
+  if (f === "bedtime") {
+    const raw = normClock(el.value);
+    setField(date, "bedtime", raw === "" ? "" : raw);
+    renderAll();
+    return;
+  }
+  setField(date, f, el.value === "" ? "" : num(el.value));
+  renderAll();
+});
+
+/* 遮罩关闭 */
+$("#dlgWrap").addEventListener("click", function (ev) { if (ev.target === this) closeDlg(); });
+
+/* ===================== 14. 启动 ===================== */
+function init() {
+  if (!state.uiDate) state.uiDate = todayStr();
+  if (diffDays(state.uiDate, todayStr()) > 0) state.uiDate = todayStr();
+  renderAll();
+
+  /* 交付门自查：文案禁止词扫描（开发期日志，用户不可见） */
+  const bad = auditFeedbackText();
+  if (bad.length) console.warn("反馈文案含禁止词：", bad);
+
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) {
+      if (state.uiDate && diffDays(state.uiDate, todayStr()) > 0) state.uiDate = todayStr();
+      renderAll();
+    }
+  });
+  window.addEventListener("beforeunload", saveState);
+}
+init();
+</script>
+</body>
+</html>
+

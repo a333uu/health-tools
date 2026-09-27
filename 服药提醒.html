@@ -1,0 +1,2013 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2f6f5e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="服药提醒">
+<meta name="format-detection" content="telephone=no">
+<title>服药提醒 · 用药计划与打卡</title>
+<style>
+/* ===================== 基础变量 ===================== */
+:root{
+  --bg:#f2f4f2;
+  --card:#ffffff;
+  --card2:#f8faf9;
+  --text:#161b19;
+  --muted:#66736c;
+  --line:#dfe5e1;
+  --accent:#2f6f5e;
+  --accent-ink:#ffffff;
+  --accent-soft:#e4f1ec;
+  --ok:#2f6f5e;
+  --ok-soft:#e4f1ec;
+  --warn:#9a5b06;
+  --warn-soft:#fdf0dd;
+  --danger:#b3261e;
+  --danger-soft:#fceceb;
+  --shadow:0 1px 2px rgba(16,32,26,.06),0 6px 18px rgba(16,32,26,.06);
+  --r:14px;
+  --tap:52px;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#111614;
+    --card:#1a201d;
+    --card2:#202824;
+    --text:#e9efeb;
+    --muted:#9aa8a1;
+    --line:#2b3531;
+    --accent:#63c2a4;
+    --accent-ink:#0c1512;
+    --accent-soft:#1e322b;
+    --ok:#63c2a4;
+    --ok-soft:#1e322b;
+    --warn:#e0a458;
+    --warn-soft:#33281a;
+    --danger:#f08a80;
+    --danger-soft:#331f1d;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.35);
+  }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Source Han Sans SC","Noto Sans CJK SC",system-ui,sans-serif;
+  font-size:16px;
+  line-height:1.5;
+  -webkit-text-size-adjust:100%;
+  overscroll-behavior-y:none;
+}
+button,input,select,textarea{font-family:inherit;font-size:16px;color:inherit}
+button{cursor:pointer;border:none;background:none}
+h1,h2,h3,h4,p{margin:0}
+ul{margin:0;padding:0;list-style:none}
+.hidden{display:none !important}
+
+/* ===================== 布局 ===================== */
+#app{
+  max-width:720px;
+  margin:0 auto;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+.topbar{
+  position:sticky;top:0;z-index:30;
+  background:var(--card);
+  border-bottom:1px solid var(--line);
+  padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;
+  display:flex;align-items:center;gap:12px;
+}
+.brand{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
+.brand .logo{font-size:26px;line-height:1}
+.brand h1{font-size:19px;font-weight:700;letter-spacing:.3px}
+.brand .sub{font-size:13px;color:var(--muted);margin-top:1px}
+main{
+  flex:1;
+  padding:14px 14px 24px;
+  padding-bottom:calc(24px + 76px + env(safe-area-inset-bottom));
+}
+.view{display:none;animation:fade .18s ease}
+.view.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* ===================== 底部导航（拇指主玩区） ===================== */
+.tabbar{
+  position:fixed;left:0;right:0;bottom:0;z-index:40;
+  background:var(--card);
+  border-top:1px solid var(--line);
+  display:flex;
+  padding-bottom:env(safe-area-inset-bottom);
+  box-shadow:0 -2px 14px rgba(16,32,26,.05);
+}
+.tabbar .inner{display:flex;width:100%;max-width:720px;margin:0 auto}
+.tabbar button{
+  flex:1;
+  min-height:60px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  color:var(--muted);
+  font-size:12px;
+  font-weight:600;
+  padding:8px 2px;
+  transition:color .15s;
+}
+.tabbar button .ti{font-size:20px;line-height:1}
+.tabbar button.on{color:var(--accent)}
+.tabbar button .badge{
+  position:absolute;transform:translate(16px,-14px);
+  background:var(--danger);color:#fff;border-radius:9px;
+  font-size:10px;padding:1px 5px;font-weight:700;
+}
+
+/* ===================== 卡片与通用件 ===================== */
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--r);
+  box-shadow:var(--shadow);
+  padding:14px;
+  margin-bottom:12px;
+}
+.card.tight{padding:0;overflow:hidden}
+.sec-title{
+  font-size:13px;font-weight:700;color:var(--muted);
+  letter-spacing:.6px;margin:18px 2px 8px;
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+}
+.sec-title:first-child{margin-top:2px}
+.row{display:flex;align-items:center;gap:10px}
+.between{justify-content:space-between}
+.wrap{flex-wrap:wrap}
+.grow{flex:1;min-width:0}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.tiny{font-size:12px}
+.center{text-align:center}
+.mt8{margin-top:8px}.mt12{margin-top:12px}.mt16{margin-top:16px}
+.mb8{margin-bottom:8px}.mb12{margin-bottom:12px}
+.ellipsis{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.btn{
+  min-height:var(--tap);
+  padding:0 18px;
+  border-radius:12px;
+  background:var(--accent);
+  color:var(--accent-ink);
+  font-weight:700;
+  font-size:16px;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  transition:transform .08s,opacity .15s;
+}
+.btn:active{transform:scale(.975);opacity:.9}
+.btn.block{display:flex;width:100%}
+.btn.ghost{background:var(--card2);color:var(--text);border:1px solid var(--line)}
+.btn.soft{background:var(--accent-soft);color:var(--accent)}
+.btn.danger{background:var(--danger-soft);color:var(--danger)}
+.btn.sm{min-height:42px;padding:0 14px;font-size:14px;border-radius:10px}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.icon-btn{
+  width:46px;height:46px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;background:var(--card2);border:1px solid var(--line);
+  flex:none;
+}
+.icon-btn:active{transform:scale(.94)}
+
+.chip{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:5px 11px;border-radius:999px;
+  background:var(--card2);border:1px solid var(--line);
+  font-size:13px;font-weight:600;white-space:nowrap;
+}
+.chip.ok{background:var(--ok-soft);color:var(--ok);border-color:transparent}
+.chip.warn{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.chip.danger{background:var(--danger-soft);color:var(--danger);border-color:transparent}
+.chip.accent{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+
+.seg{display:flex;background:var(--card2);border:1px solid var(--line);border-radius:11px;padding:3px;gap:3px}
+.seg button{
+  flex:1;min-height:40px;border-radius:9px;font-size:14px;font-weight:600;color:var(--muted);
+}
+.seg button.on{background:var(--card);color:var(--text);box-shadow:var(--shadow)}
+
+.field{margin-bottom:14px}
+.field > label{display:block;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:6px}
+.field .hint{font-size:12px;color:var(--muted);margin-top:5px;line-height:1.45}
+input[type=text],input[type=date],input[type=time],input[type=number],select,textarea{
+  width:100%;
+  min-height:var(--tap);
+  padding:12px 13px;
+  border-radius:11px;
+  border:1px solid var(--line);
+  background:var(--card2);
+  color:var(--text);
+  outline:none;
+  transition:border-color .15s,box-shadow .15s;
+}
+textarea{min-height:76px;resize:vertical;line-height:1.5}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+input[type=checkbox]{width:22px;height:22px;accent-color:var(--accent)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+
+/* ===================== 今日服药行 ===================== */
+.dose{
+  display:flex;align-items:center;gap:12px;
+  padding:13px 14px;
+  border-bottom:1px solid var(--line);
+  background:var(--card);
+}
+.dose:last-child{border-bottom:none}
+.dose .time{
+  font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;
+  min-width:56px;letter-spacing:.5px;
+}
+.dose .info{flex:1;min-width:0}
+.dose .nm{font-weight:700;font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dose .ds{font-size:13px;color:var(--muted);margin-top:2px}
+.dose .act{flex:none;display:flex;gap:8px;align-items:center}
+.dose.taken{background:var(--ok-soft)}
+.dose.skipped{opacity:.55}
+.dose.late{background:var(--warn-soft)}
+.checkbtn{
+  width:56px;height:56px;border-radius:50%;
+  border:2px solid var(--line);
+  background:var(--card);
+  display:flex;align-items:center;justify-content:center;
+  font-size:26px;color:var(--muted);
+  flex:none;
+}
+.checkbtn.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+
+.big-dose{
+  text-align:center;padding:18px 14px;
+  background:linear-gradient(160deg,var(--accent-soft),var(--card));
+  border:1px solid var(--line);border-radius:var(--r);
+}
+.big-dose .n{font-size:38px;font-weight:800;letter-spacing:-1px;line-height:1.1;color:var(--accent)}
+.big-dose .u{font-size:16px;font-weight:700;color:var(--accent);margin-left:4px}
+.big-dose .cap{font-size:13px;color:var(--muted);margin-top:6px}
+
+.datebar{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.datebar .lab{flex:1;text-align:center;font-weight:700;font-size:16px}
+.datebar button{
+  width:46px;height:46px;border-radius:12px;background:var(--card);
+  border:1px solid var(--line);font-size:20px;flex:none;
+  display:flex;align-items:center;justify-content:center;
+}
+.datebar button:active{transform:scale(.94)}
+
+/* ===================== 计划列表 ===================== */
+.dayrow{display:flex;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.dayrow:last-child{border-bottom:none}
+.dayrow .d{min-width:74px;flex:none}
+.dayrow .dw{font-size:12px;color:var(--muted);font-weight:700}
+.dayrow .dd{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums}
+.dayrow.today{background:var(--accent-soft)}
+.dayrow .list{flex:1;display:flex;flex-direction:column;gap:6px;min-width:0}
+.dayrow .it{display:flex;align-items:center;gap:8px;font-size:14px}
+.dayrow .it b{font-variant-numeric:tabular-nums}
+
+/* ===================== 药物卡片 ===================== */
+.medcard{display:flex;gap:12px;padding:14px;border-bottom:1px solid var(--line);align-items:flex-start}
+.medcard:last-child{border-bottom:none}
+.medcard .dot{width:12px;height:12px;border-radius:50%;flex:none;margin-top:6px}
+.medcard .body{flex:1;min-width:0}
+.medcard .t{font-weight:700;font-size:16px}
+.medcard .meta{font-size:13px;color:var(--muted);margin-top:3px;line-height:1.5}
+
+/* ===================== 底部抽屉（表单） ===================== */
+.sheet-wrap{
+  position:fixed;inset:0;z-index:60;
+  background:rgba(10,18,15,.45);
+  display:flex;align-items:flex-end;justify-content:center;
+  backdrop-filter:blur(2px);
+}
+.sheet{
+  width:100%;max-width:720px;
+  background:var(--card);
+  border-radius:18px 18px 0 0;
+  max-height:92vh;
+  display:flex;flex-direction:column;
+  animation:up .22s cubic-bezier(.2,.8,.3,1);
+}
+@keyframes up{from{transform:translateY(28px)}to{transform:none}}
+.sheet .head{
+  display:flex;align-items:center;gap:10px;
+  padding:14px 14px 12px;border-bottom:1px solid var(--line);flex:none;
+}
+.sheet .head h3{font-size:17px;font-weight:800;flex:1}
+.sheet .body{overflow-y:auto;padding:16px 14px;-webkit-overflow-scrolling:touch}
+.sheet .foot{
+  padding:12px 14px calc(12px + env(safe-area-inset-bottom));
+  border-top:1px solid var(--line);
+  display:flex;gap:10px;flex:none;background:var(--card);
+}
+.sheet .foot .btn{flex:1}
+.preview{
+  background:var(--card2);border:1px solid var(--line);border-radius:11px;
+  padding:10px 12px;font-size:13px;line-height:1.9;max-height:230px;overflow:auto;
+}
+.preview .pr{display:flex;justify-content:space-between;gap:10px;font-variant-numeric:tabular-nums}
+.preview .pr b{color:var(--accent)}
+
+/* ===================== 提示 ===================== */
+#toast{
+  position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));
+  transform:translate(-50%,14px);
+  background:#20211f;color:#fff;
+  padding:11px 18px;border-radius:999px;
+  font-size:14px;font-weight:600;
+  opacity:0;pointer-events:none;transition:all .22s;z-index:80;
+  max-width:86vw;text-align:center;
+}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+.empty{text-align:center;padding:38px 18px;color:var(--muted)}
+.empty .e{font-size:44px;margin-bottom:10px}
+.empty .t{font-weight:700;color:var(--text);margin-bottom:6px;font-size:16px}
+.note{
+  background:var(--warn-soft);border:1px solid transparent;color:var(--warn);
+  border-radius:11px;padding:11px 13px;font-size:13px;line-height:1.6;
+}
+.note.info{background:var(--accent-soft);color:var(--accent)}
+.note b{font-weight:800}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
+.kv:last-child{border-bottom:none}
+.kv .k{color:var(--muted)}
+.kv .v{font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+.timelist{display:flex;flex-wrap:wrap;gap:8px}
+.timechip{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--card2);border:1px solid var(--line);
+  border-radius:11px;padding:0 6px 0 13px;min-height:46px;font-weight:700;
+  font-variant-numeric:tabular-nums;
+}
+.timechip button{width:34px;height:34px;border-radius:8px;font-size:17px;color:var(--muted)}
+details.help{border:1px solid var(--line);border-radius:12px;margin-bottom:10px;background:var(--card);overflow:hidden}
+details.help summary{
+  padding:14px;font-weight:700;font-size:15px;cursor:pointer;list-style:none;
+  display:flex;align-items:center;gap:8px;min-height:var(--tap);
+}
+details.help summary::-webkit-details-marker{display:none}
+details.help summary::after{content:"▾";margin-left:auto;color:var(--muted);transition:transform .2s}
+details.help[open] summary::after{transform:rotate(180deg)}
+details.help .c{padding:0 14px 14px;font-size:14px;line-height:1.75;color:var(--muted)}
+details.help .c b{color:var(--text)}
+details.help .c ol,details.help .c ul{padding-left:20px;list-style:revert;margin:6px 0}
+details.help .c li{margin-bottom:5px}
+@media (max-width:360px){
+  .grid2{grid-template-columns:1fr}
+  .big-dose .n{font-size:32px}
+  .dose .time{min-width:48px;font-size:15px}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- 顶部栏 -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">💊</span>
+      <div class="grow">
+        <h1>服药提醒</h1>
+        <div class="sub" id="todayLabel">—</div>
+      </div>
+    </div>
+    <button class="icon-btn" id="btnAddTop" aria-label="添加药物">＋</button>
+  </header>
+
+  <!-- 主视图区 -->
+  <main>
+    <section class="view on" id="view-today"></section>
+    <section class="view" id="view-plan"></section>
+    <section class="view" id="view-meds"></section>
+    <section class="view" id="view-logs"></section>
+    <section class="view" id="view-set"></section>
+  </main>
+
+  <!-- 底部导航（拇指主玩区，触控目标 >= 60px 高） -->
+  <nav class="tabbar">
+    <div class="inner">
+      <button class="on" data-tab="today"><span class="ti">✅</span><span>今日</span><span class="badge hidden" id="tabBadge"></span></button>
+      <button data-tab="plan"><span class="ti">🗓</span><span>计划</span></button>
+      <button data-tab="meds"><span class="ti">💊</span><span>药物</span></button>
+      <button data-tab="logs"><span class="ti">📋</span><span>记录</span></button>
+      <button data-tab="set"><span class="ti">⚙️</span><span>设置</span></button>
+    </div>
+  </nav>
+
+</div>
+
+<!-- 底部抽屉：药物编辑表单 -->
+<div class="sheet-wrap hidden" id="sheetWrap">
+  <div class="sheet" role="dialog" aria-modal="true">
+    <div class="head">
+      <h3 id="sheetTitle">添加药物</h3>
+      <button class="icon-btn" id="sheetClose" aria-label="关闭">✕</button>
+    </div>
+    <div class="body" id="sheetBody"></div>
+    <div class="foot" id="sheetFoot"></div>
+  </div>
+</div>
+
+<!-- 通用确认抽屉 -->
+<div class="sheet-wrap hidden" id="dlgWrap">
+  <div class="sheet" role="dialog" aria-modal="true">
+    <div class="head"><h3 id="dlgTitle">提示</h3></div>
+    <div class="body" id="dlgBody"></div>
+    <div class="foot" id="dlgFoot"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+"use strict";
+/* ============================================================
+   服药提醒 —— 单文件离线应用
+   数据全部保存在本机浏览器 localStorage，不联网、不上传
+   ============================================================ */
+/* ===================== 1. 常量与状态 ===================== */
+const STORE_KEY = "med_reminder_v1";
+const WEEK_CN = ["日", "一", "二", "三", "四", "五", "六"];
+const UNITS = ["片", "粒", "袋", "支", "毫升", "滴", "喷", "单位"];
+const MEALS = ["", "饭前", "饭后", "随餐", "空腹", "睡前"];
+const COLORS = ["#2f6f5e", "#2b6cb0", "#9a5b06", "#b3261e", "#6b46c1", "#0f766e", "#a16207", "#be185d"];
+
+function defaultState() {
+  return {
+    v: 1,
+    meds: [],
+    logs: {},          // "日期|药物id|时间" -> {s:"taken"|"skipped", at: 时间戳}
+    settings: {
+      exportDays: 60,
+      alarmMin: [15, 0],   // 日历提醒提前分钟
+      notifyOn: false
+    },
+    uiDate: ""         // 今日视图当前查看的日期
+  };
+}
+
+let state = loadState();
+
+function loadState() {
+  const base = defaultState();
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (!raw) return base;
+    const o = JSON.parse(raw);
+    return {
+      v: 1,
+      meds: Array.isArray(o.meds) ? o.meds : [],
+      logs: o.logs && typeof o.logs === "object" ? o.logs : {},
+      settings: Object.assign(base.settings, o.settings || {}),
+      uiDate: o.uiDate || ""
+    };
+  } catch (e) {
+    console.warn("读取本地数据失败，已重置", e);
+    return base;
+  }
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify(state));
+  } catch (e) {
+    toast("保存失败：本机存储空间不足或被浏览器限制");
+  }
+}
+
+/* ===================== 2. 通用工具 ===================== */
+const $ = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.prototype.slice.call((r || document).querySelectorAll(s));
+const pad2 = n => (n < 10 ? "0" + n : "" + n);
+
+function todayStr() {
+  const d = new Date();
+  return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+}
+function parseD(s) {
+  const p = String(s || "").split("-");
+  return new Date(+p[0], (+p[1] || 1) - 1, +p[2] || 1);
+}
+function fmtD(d) {
+  return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+}
+function addDays(s, n) {
+  const d = parseD(s);
+  d.setDate(d.getDate() + n);
+  return fmtD(d);
+}
+function diffDays(a, b) {
+  const A = parseD(a), B = parseD(b);
+  A.setHours(0, 0, 0, 0); B.setHours(0, 0, 0, 0);
+  return Math.round((B - A) / 86400000);
+}
+function weekdayOf(s) { return WEEK_CN[parseD(s).getDay()]; }
+function nowHM() {
+  const d = new Date();
+  return pad2(d.getHours()) + ":" + pad2(d.getMinutes());
+}
+function uid() {
+  return "m" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+function esc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, c => (
+    { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]
+  ));
+}
+function num(v) {
+  const n = parseFloat(v);
+  return isNaN(n) ? 0 : n;
+}
+/* 剂量数字：去掉多余的 0 */
+function doseNum(v) {
+  const n = Math.round(num(v) * 1000) / 1000;
+  return String(n);
+}
+/* 剂量展示：1 片 / 0.5 片（半片） */
+function doseText(v, unit, withHint) {
+  const n = Math.round(num(v) * 1000) / 1000;
+  let hint = "";
+  if (withHint && (unit === "片" || unit === "粒")) {
+    if (n === 0.5) hint = "半" + unit;
+    else if (n === 0.25) hint = "四分之一" + unit;
+    else if (n === 0.75) hint = "四分之三" + unit;
+    else if (n === 1.5) hint = "一" + unit + "半";
+    else if (n === 2.5) hint = "两" + unit + "半";
+  }
+  return doseNum(n) + " " + unit + (hint ? "（" + hint + "）" : "");
+}
+/* 日期友好显示 */
+function dateLabel(s) {
+  const t = todayStr();
+  const d = diffDays(t, s);
+  if (d === 0) return "今天";
+  if (d === -1) return "昨天";
+  if (d === 1) return "明天";
+  if (d === 2) return "后天";
+  if (d === -2) return "前天";
+  return s.slice(5).replace("-", "月") + "日";
+}
+function dateFull(s) {
+  return s + " 周" + weekdayOf(s);
+}
+function toast(msg, ms) {
+  const el = $("#toast");
+  el.textContent = msg;
+  el.classList.add("on");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => el.classList.remove("on"), ms || 2000);
+}
+function findMed(id) {
+  for (let i = 0; i < state.meds.length; i++) if (state.meds[i].id === id) return state.meds[i];
+  return null;
+}
+function logKey(date, medId, time) { return date + "|" + medId + "|" + time; }
+function getLog(date, medId, time) { return state.logs[logKey(date, medId, time)] || null; }
+function setLog(date, medId, time, status) {
+  const k = logKey(date, medId, time);
+  if (!status) delete state.logs[k];
+  else state.logs[k] = { s: status, at: Date.now() };
+  saveState();
+}
+/* ===================== 3. 剂量规律计算 ===================== */
+/* 药物是否在指定「第几天」有效 */
+function medActiveOn(med, dayIndex) {
+  if (med.enabled === false) return false;
+  if (dayIndex < 0) return false;
+  if (med.durationDays != null && med.durationDays !== "" && dayIndex >= num(med.durationDays)) return false;
+  return true;
+}
+
+/* 该天的「规律值」：
+   mode=cycle → 循环序列，例如 [1, 0.5] 表示 1片 / 半片 / 1片 / 半片 …
+   mode=step  → 阶梯，每 everyDays 天变化 delta（可为负，用于逐渐减量） */
+function cycleValue(med, dayIndex) {
+  const c = (med.cycle && med.cycle.length ? med.cycle : [0]).map(num);
+  if (!c.length) return 0;
+  const i = ((dayIndex % c.length) + c.length) % c.length;
+  return c[i];
+}
+function stepValue(med, dayIndex) {
+  const s = med.step || {};
+  const every = Math.max(1, Math.round(num(s.everyDays) || 1));
+  const steps = Math.floor(dayIndex / every);
+  let v = num(s.start) + steps * num(s.delta);
+  if (s.min != null && s.min !== "" && num(s.delta) < 0) v = Math.max(num(s.min), v);
+  if (s.max != null && s.max !== "" && num(s.delta) > 0) v = Math.min(num(s.max), v);
+  return Math.max(0, v);
+}
+/* ---------- 交替方案（两种或多种药轮着吃） ----------
+   alt = {
+     members:  [ {name, dose, unit}, ... ]      成员药
+     segments: [ {m: 成员下标, days: 连续几天}, ... ]   交替节奏
+     startMember: 开始那天吃第几个成员（用户填的「初始值」）
+   }                                                          */
+function altMembers(med) {
+  const a = med.alt || {};
+  const ms = (a.members && a.members.length) ? a.members : [];
+  if (ms.length) return ms;
+  return [{ name: "药A", dose: 1, unit: "片" }, { name: "药B", dose: 1, unit: "片" }];
+}
+/* 把「节奏」展开成逐日的成员下标序列，如 [0,1] 或 [0,0,1,1] */
+function altCycle(med) {
+  const a = med.alt || {};
+  const segs = (a.segments && a.segments.length) ? a.segments : [{ m: 0, days: 1 }, { m: 1, days: 1 }];
+  const n = altMembers(med).length;
+  const out = [];
+  for (let i = 0; i < segs.length; i++) {
+    const s = segs[i];
+    const mi = Math.min(n - 1, Math.max(0, Math.round(num(s.m))));
+    const d = Math.max(1, Math.round(num(s.days) || 1));
+    for (let k = 0; k < d; k++) out.push(mi);
+  }
+  return out.length ? out : [0];
+}
+/* 「初始值」决定从节奏的第几位起算 */
+function altOffset(med) {
+  const a = med.alt || {};
+  const cyc = altCycle(med);
+  const want = Math.max(0, Math.round(num(a.startMember) || 0));
+  const i = cyc.indexOf(want);
+  return i >= 0 ? i : 0;
+}
+function altMemberIndex(med, dayIndex) {
+  const cyc = altCycle(med);
+  const off = altOffset(med);
+  const i = (((off + dayIndex) % cyc.length) + cyc.length) % cyc.length;
+  return cyc[i];
+}
+function altMember(med, dayIndex) {
+  const ms = altMembers(med);
+  const idx = altMemberIndex(med, dayIndex);
+  return ms[idx] || ms[0];
+}
+/* 该天实际吃的是哪种药、吃多少（统一出口，渲染与导出都走这里） */
+function dayDoseInfo(med, dayIndex) {
+  if (med.mode === "alt") {
+    const m = altMember(med, dayIndex);
+    return {
+      name: m.name || ("第" + (altMemberIndex(med, dayIndex) + 1) + "种药"),
+      dose: Math.round(num(m.dose) * 1000) / 1000,
+      unit: m.unit || med.unit || "片",
+      strength: ""
+    };
+  }
+  return {
+    name: med.name,
+    dose: slotDose(med, dayIndex),
+    unit: med.unit || "片",
+    strength: med.strength || ""
+  };
+}
+
+function patternValue(med, dayIndex) {
+  if (med.mode === "alt") return num(altMember(med, dayIndex).dose);
+  return med.mode === "step" ? stepValue(med, dayIndex) : cycleValue(med, dayIndex);
+}
+
+/* 每次剂量（真正要吃的量） */
+function slotDose(med, dayIndex) {
+  if (med.mode === "alt") return Math.round(num(altMember(med, dayIndex).dose) * 1000) / 1000;
+  const base = patternValue(med, dayIndex);
+  const n = Math.max(1, (med.times && med.times.length) || 1);
+  const per = med.doseMode === "perDay" ? base / n : base;
+  return Math.round(per * 1000) / 1000;
+}
+/* 每日总量 */
+function dailyTotal(med, dayIndex) {
+  const n = Math.max(1, (med.times && med.times.length) || 1);
+  if (med.mode === "alt") return Math.round(num(altMember(med, dayIndex).dose) * n * 1000) / 1000;
+  const base = patternValue(med, dayIndex);
+  return Math.round((med.doseMode === "perDay" ? base : base * n) * 1000) / 1000;
+}
+/* 某天相对开始日的序号 */
+function dayIndexOf(med, dateStr) { return diffDays(med.startDate, dateStr); }
+
+/* 生成某天的全部服药项 */
+function getDayPlan(dateStr) {
+  const out = [];
+  for (let i = 0; i < state.meds.length; i++) {
+    const med = state.meds[i];
+    const di = dayIndexOf(med, dateStr);
+    if (!medActiveOn(med, di)) continue;
+    const times = (med.times && med.times.length ? med.times : ["08:00"]).slice().sort();
+    const info = dayDoseInfo(med, di);
+    for (let j = 0; j < times.length; j++) {
+      out.push({
+        date: dateStr, med: med, time: times[j], dose: info.dose,
+        name: info.name, unit: info.unit, strength: info.strength,
+        dayIndex: di, key: logKey(dateStr, med.id, times[j]),
+        log: getLog(dateStr, med.id, times[j])
+      });
+    }
+  }
+  out.sort((a, b) => (a.time < b.time ? -1 : a.time > b.time ? 1 : 0));
+  return out;
+}
+
+/* 交替方案的成员摘要，如「氨氯地平 1 片 ⇄ 缬沙坦 1 片」 */
+function altSummaryText(med) {
+  const ms = altMembers(med);
+  return ms.map(function (m, i) {
+    return (m.name || ("第" + (i + 1) + "种")) + " " + doseNum(m.dose) + " " + (m.unit || "片");
+  }).join("  ⇄  ");
+}
+/* 交替节奏摘要，如「各 1 天」/「甲 3 天 → 乙 3 天」 */
+function altRhythmText(med) {
+  const ms = altMembers(med);
+  const segs = (med.alt && med.alt.segments && med.alt.segments.length)
+    ? med.alt.segments : [{ m: 0, days: 1 }, { m: 1, days: 1 }];
+  return segs.map(function (s) {
+    const m = ms[Math.min(ms.length - 1, Math.max(0, Math.round(num(s.m))))] || {};
+    return (m.name || "药") + " " + Math.max(1, Math.round(num(s.days) || 1)) + " 天";
+  }).join(" → ");
+}
+
+/* 药物的规律摘要文字 */
+function patternSummary(med) {
+  const u = med.unit || "片";
+  const n = Math.max(1, (med.times && med.times.length) || 1);
+  const perDay = med.doseMode === "perDay";
+  let s;
+  if (med.mode === "alt") {
+    s = "交替：" + altSummaryText(med) + "（" + altRhythmText(med) + "）";
+    if (n > 1) s += "；每天 " + n + " 次，每次按各自剂量";
+    return s;
+  }
+  if (med.mode === "step") {
+    const st = med.step || {};
+    const d = num(st.delta);
+    s = "起始 " + doseNum(st.start) + " " + u + "，每 " + Math.max(1, Math.round(num(st.everyDays) || 1)) + " 天" +
+        (d < 0 ? "减 " : "加 ") + doseNum(Math.abs(d)) + " " + u;
+    if (st.min != null && st.min !== "" && d < 0) s += "，不低于 " + doseNum(st.min);
+    if (st.max != null && st.max !== "" && d > 0) s += "，不超过 " + doseNum(st.max);
+  } else {
+    const c = (med.cycle && med.cycle.length ? med.cycle : [1]).map(v => doseNum(v)).join(" / ");
+    const len = (med.cycle || []).length || 1;
+    s = "循环 " + c + " " + u + (len > 1 ? "（每 " + len + " 天一轮）" : "（每天一样）");
+  }
+  if (n > 1) {
+    s += "；每天 " + n + " 次";
+    if (perDay) s += "，总量按上面数值分到各次";
+    else s += "，每次按上面数值";
+  } else if (perDay) {
+    s += "；每天 1 次";
+  }
+  return s;
+}
+
+/* 疗程文字 */
+function courseSummary(med) {
+  if (med.durationDays != null && med.durationDays !== "") {
+    const n = num(med.durationDays);
+    return med.startDate + " 起，共 " + n + " 天（至 " + addDays(med.startDate, n - 1) + "）";
+  }
+  return med.startDate + " 起，长期服用";
+}
+
+/* ===================== 4. 库存推算 ===================== */
+function stockInfo(med) {
+  if (med.mode === "alt") return null;   /* 交替方案不做库存推算（每种药各自计数） */
+  if (med.stock == null || med.stock === "") return null;
+  const total = num(med.stock);
+  let used = 0;
+  for (const k in state.logs) {
+    if (!Object.prototype.hasOwnProperty.call(state.logs, k)) continue;
+    const p = k.split("|");
+    if (p[1] !== med.id) continue;
+    if (state.logs[k].s !== "taken") continue;
+    const di = dayIndexOf(med, p[0]);
+    if (di < 0) continue;
+    used += slotDose(med, di);
+  }
+  const remain = Math.max(0, Math.round((total - used) * 1000) / 1000);
+  let acc = 0, days = 0;
+  let di = Math.max(0, dayIndexOf(med, todayStr()));
+  let guard = 0;
+  while (guard++ < 4000) {
+    if (med.durationDays != null && med.durationDays !== "" && di >= num(med.durationDays)) break;
+    const need = dailyTotal(med, di);
+    if (need <= 0) { di++; continue; }
+    if (acc + need > remain + 1e-9) break;
+    acc += need; days++; di++;
+  }
+  return { total: total, used: Math.round(used * 1000) / 1000, remain: remain, days: days };
+}
+
+/* 未来 N 天预览 */
+function previewDays(med, n) {
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    const di = i;
+    out.push({
+      i: i,
+      date: addDays(med.startDate, i),
+      total: dailyTotal(med, di),
+      per: slotDose(med, di)
+    });
+  }
+  return out;
+}
+/* ===================== 5. 渲染：今日 ===================== */
+function currentDate() {
+  return state.uiDate || todayStr();
+}
+function pendingCount(dateStr) {
+  const items = getDayPlan(dateStr);
+  let n = 0;
+  for (let i = 0; i < items.length; i++) if (!items[i].log) n++;
+  return n;
+}
+function renderToday() {
+  const date = currentDate();
+  const items = getDayPlan(date);
+  const v = $("#view-today");
+  let h = "";
+
+  /* 日期切换条 */
+  h += '<div class="datebar">' +
+       '<button data-act="prevday" aria-label="前一天">‹</button>' +
+       '<div class="lab">' + dateLabel(date) + ' · ' + dateFull(date) + '</div>' +
+       '<button data-act="nextday" aria-label="后一天">›</button>' +
+       '</div>';
+
+  if (!state.meds.length) {
+    h += '<div class="card empty">' +
+         '<div class="e">💊</div>' +
+         '<div class="t">还没有添加药物</div>' +
+         '<div class="small">点下面的按钮，把医生开的药和用量填进去，<br>之后每天的提醒会自动排好。</div>' +
+         '<button class="btn block mt16" data-act="addmed">＋ 添加第一种药</button>' +
+         '</div>';
+    v.innerHTML = h;
+    return;
+  }
+
+  if (!items.length) {
+    h += '<div class="card empty"><div class="e">🌿</div>' +
+         '<div class="t">' + dateLabel(date) + '不用服药</div>' +
+         '<div class="small">按当前计划，这一天没有安排。</div></div>';
+    v.innerHTML = h;
+    return;
+  }
+
+  /* 汇总卡 */
+  let totalTxt = "";
+  if (state.meds.length === 1) {
+    const m = state.meds[0];
+    const di = dayIndexOf(m, date);
+    const info = dayDoseInfo(m, di);
+    const t = dailyTotal(m, di);
+    const times = Math.max(1, (m.times && m.times.length) || 1);
+    totalTxt = '<div class="big-dose"><div><span class="n">' + doseNum(t) + '</span><span class="u">' + esc(info.unit) + '</span></div>' +
+               '<div class="cap">' + esc(info.name) + (times > 1 ? " · 今日总量" : " · 今天该吃这个") + '</div>' +
+               (m.mode === "alt" ? '<div class="tiny muted mt8">交替方案：' + esc(altSummaryText(m)) + '</div>' : "") +
+               '</div>';
+  } else {
+    const parts = [];
+    for (let i = 0; i < state.meds.length; i++) {
+      const m = state.meds[i];
+      const di = dayIndexOf(m, date);
+      if (!medActiveOn(m, di)) continue;
+      const info = dayDoseInfo(m, di);
+      parts.push('<span class="chip accent">' + esc(info.name) + " " + doseNum(dailyTotal(m, di)) + " " + esc(info.unit) + "</span>");
+    }
+    totalTxt = '<div class="card"><div class="small muted mb8">今日合计（' + (parts.length) + ' 种药）</div>' +
+               '<div class="row wrap">' + parts.join("") + '</div></div>';
+  }
+
+  /* 服药清单 */
+  const done = items.filter(x => x.log && x.log.s === "taken").length;
+  const skipped = items.filter(x => x.log && x.log.s === "skipped").length;
+  let list = "";
+  for (let i = 0; i < items.length; i++) {
+    const it = items[i];
+    const st = it.log ? it.log.s : "";
+    let cls = "dose";
+    if (st === "taken") cls += " taken";
+    else if (st === "skipped") cls += " skipped";
+    else if (it.date < todayStr() || (it.date === todayStr() && it.time < nowHM())) cls += " late";
+
+    let stateTxt = "";
+    if (st === "taken") stateTxt = '<span class="chip ok">✓ 已服</span>';
+    else if (st === "skipped") stateTxt = '<span class="chip">— 已跳过</span>';
+    else if (it.date === todayStr() && it.time < nowHM()) stateTxt = '<span class="chip warn">⚠ 已过点</span>';
+
+    list += '<div class="' + cls + '">' +
+      '<div class="time">' + esc(it.time) + '</div>' +
+      '<div class="info">' +
+        '<div class="nm">' + esc(it.name) + '</div>' +
+        '<div class="ds">' + doseText(it.dose, it.unit, true) +
+          (it.med.meal ? " · " + esc(it.med.meal) : "") +
+          (it.strength ? " · " + esc(it.strength) : "") +
+          (it.med.mode === "alt" ? " · " + esc(it.med.name) : "") + '</div>' +
+      '</div>' +
+      '<div class="act">' + stateTxt +
+        '<button class="checkbtn' + (st === "taken" ? " on" : "") + '" data-act="toggle" data-k="' + esc(it.key) + '" aria-label="标记已服用">' + (st === "taken" ? "✓" : "○") + '</button>' +
+      '</div></div>';
+  }
+
+  h += totalTxt;
+  h += '<div class="sec-title"><span>服药清单</span><span class="muted tiny">已服 ' + done + ' / 共 ' + items.length + (skipped ? "，跳过 " + skipped : "") + '</span></div>';
+  h += '<div class="card tight">' + list + '</div>';
+  h += '<div class="note info mt12">点右边的圆圈可以打卡「已服」；再点一次取消。长按某一项可以标记「跳过」。</div>';
+
+  v.innerHTML = h;
+}
+
+/* 明日预告（放在今日视图底部） */
+function tomorrowHint() {
+  const t = addDays(todayStr(), 1);
+  const items = getDayPlan(t);
+  if (!items.length) return "";
+  const map = {};
+  for (let i = 0; i < items.length; i++) {
+    const k = items[i].name;
+    if (!map[k]) map[k] = { n: 0, dose: items[i].dose, unit: items[i].unit, times: 0 };
+    map[k].times++;
+  }
+  const arr = Object.keys(map).map(k =>
+    '<span class="chip">' + esc(k) + " " + doseNum(map[k].dose) + " " + esc(map[k].unit) + (map[k].times > 1 ? " ×" + map[k].times : "") + "</span>"
+  );
+  return '<div class="sec-title"><span>明天预告</span></div><div class="card"><div class="row wrap">' + arr.join("") + '</div></div>';
+}
+/* ===================== 6. 渲染：计划 ===================== */
+function renderPlan() {
+  const v = $("#view-plan");
+  if (!state.meds.length) {
+    v.innerHTML = '<div class="card empty"><div class="e">🗓</div><div class="t">还没有计划</div>' +
+                  '<div class="small">先添加药物，这里会自动排出未来每天的用量。</div>' +
+                  '<button class="btn block mt16" data-act="addmed">＋ 添加药物</button></div>';
+    return;
+  }
+  let h = '<div class="sec-title"><span>未来 14 天用量</span><span class="muted tiny">自动按规律生成</span></div>';
+  h += '<div class="card tight">';
+  for (let i = 0; i < 14; i++) {
+    const d = addDays(todayStr(), i);
+    const items = getDayPlan(d);
+    let inner = "";
+    if (!items.length) {
+      inner = '<div class="it muted">— 无安排 —</div>';
+    } else {
+      const agg = {};
+      const order = [];
+      for (let j = 0; j < items.length; j++) {
+        const it = items[j];
+        const k = it.med.id + "|" + it.name;
+        if (!agg[k]) { agg[k] = { name: it.name, unit: it.unit, dose: it.dose, n: 0, color: it.med.color }; order.push(k); }
+        agg[k].n++;
+      }
+      for (let j = 0; j < order.length; j++) {
+        const a = agg[order[j]];
+        inner += '<div class="it"><span class="dot" style="width:9px;height:9px;border-radius:50%;background:' + esc(a.color || "#2f6f5e") + '"></span>' +
+                 '<span class="grow ellipsis">' + esc(a.name) + '</span>' +
+                 '<b>' + doseNum(a.dose) + " " + esc(a.unit) + (a.n > 1 ? " ×" + a.n : "") + '</b></div>';
+      }
+    }
+    h += '<div class="dayrow' + (i === 0 ? " today" : "") + '">' +
+         '<div class="d"><div class="dw">周' + weekdayOf(d) + (i === 0 ? " · 今天" : "") + '</div>' +
+         '<div class="dd">' + d.slice(5).replace("-", "/") + '</div></div>' +
+         '<div class="list">' + inner + '</div></div>';
+  }
+  h += '</div>';
+  h += '<div class="note mt12">这个表是从「开始日期 + 规律」推算出来的，<b>不需要你手动排</b>。改规律后这里会自动变。</div>';
+  v.innerHTML = h;
+}
+
+/* ===================== 7. 渲染：药物 ===================== */
+function renderMeds() {
+  const v = $("#view-meds");
+  let h = '<div class="sec-title"><span>我的药物（' + state.meds.length + '）</span>' +
+          '<button class="btn sm soft" data-act="addmed">＋ 添加</button></div>';
+  if (!state.meds.length) {
+    v.innerHTML = h + '<div class="card empty"><div class="e">💊</div><div class="t">还没有药物</div>' +
+                  '<div class="small">添加时可以填写规律，例如「1 / 0.5」表示<br>今天 1 片、明天半片、后天又是 1 片。</div></div>';
+    return;
+  }
+  h += '<div class="card tight">';
+  for (let i = 0; i < state.meds.length; i++) {
+    const m = state.meds[i];
+    const today = todayStr();
+    const di = dayIndexOf(m, today);
+    const active = medActiveOn(m, di);
+    const si = stockInfo(m);
+    let meta = '<div class="meta">' + esc(patternSummary(m)) + '</div>';
+    if (m.mode === "alt") {
+      const d0 = dayIndexOf(m, today);
+      if (medActiveOn(m, d0)) {
+        const inf = dayDoseInfo(m, d0);
+        meta += '<div class="meta">今天该吃：<b>' + esc(inf.name) + " " + doseNum(inf.dose) + " " + esc(inf.unit) + "</b></div>";
+      }
+    }
+    meta += '<div class="meta">' + esc(courseSummary(m)) + '</div>';
+    if (m.meal) meta += '<div class="meta">服用要求：' + esc(m.meal) + '</div>';
+    if (m.times && m.times.length) meta += '<div class="meta">时间：' + esc(m.times.slice().sort().join(" / ")) + '</div>';
+    if (si) {
+      meta += '<div class="meta">剩余约 <b>' + doseNum(si.remain) + " " + esc(m.unit || "片") + '</b>' +
+              (si.days ? '（约可服 ' + si.days + ' 天）' : '') + '</div>';
+    }
+    if (m.note) meta += '<div class="meta">备注：' + esc(m.note) + '</div>';
+
+    let status = active ? '<span class="chip ok">进行中</span>'
+      : (di < 0 ? '<span class="chip">未开始</span>' : '<span class="chip">已结束</span>');
+    if (m.enabled === false) status = '<span class="chip warn">已暂停</span>';
+
+    h += '<div class="medcard">' +
+      '<span class="dot" style="background:' + esc(m.color || "#2f6f5e") + '"></span>' +
+      '<div class="body">' +
+        '<div class="row between"><div class="t grow ellipsis">' + esc(m.name) + '</div>' + status + '</div>' +
+        meta +
+        '<div class="row wrap mt8">' +
+          '<button class="btn sm ghost" data-act="editmed" data-id="' + esc(m.id) + '">编辑</button>' +
+          '<button class="btn sm ghost" data-act="togmed" data-id="' + esc(m.id) + '">' + (m.enabled === false ? "恢复" : "暂停") + '</button>' +
+          '<button class="btn sm danger" data-act="delmed" data-id="' + esc(m.id) + '">删除</button>' +
+        '</div>' +
+      '</div></div>';
+  }
+  h += '</div>';
+  h += '<div class="note mt12">按当前设置，' + state.meds.length + ' 种药合计每天最多 ' +
+       doseNum(state.meds.reduce((s, m) => {
+         const di = Math.max(0, dayIndexOf(m, todayStr()));
+         return s + (medActiveOn(m, di) ? dailyTotal(m, di) : 0);
+       }, 0)) + ' 个剂量单位。</div>';
+  v.innerHTML = h;
+}
+
+/* ===================== 8. 渲染：记录 ===================== */
+function renderLogs() {
+  const v = $("#view-logs");
+  const today = todayStr();
+
+  /* 近 30 天依从率 */
+  let plan = 0, taken = 0;
+  for (let i = 0; i < 30; i++) {
+    const d = addDays(today, -i);
+    const items = getDayPlan(d);
+    for (let j = 0; j < items.length; j++) {
+      const past = d < today || (d === today && items[j].time <= nowHM());
+      if (!past) continue;
+      plan++;
+      if (items[j].log && items[j].log.s === "taken") taken++;
+    }
+  }
+  const rate = plan ? Math.round(taken / plan * 100) : 0;
+
+  let h = '<div class="sec-title"><span>近 30 天依从情况</span></div>';
+  h += '<div class="card"><div class="row between mb8"><div class="muted small">按时打卡</div>' +
+       '<div><b style="font-size:22px">' + taken + '</b><span class="muted"> / ' + plan + '</span></div></div>' +
+       '<div style="height:10px;border-radius:6px;background:var(--card2);overflow:hidden">' +
+       '<div style="height:100%;width:' + rate + '%;background:var(--accent)"></div></div>' +
+       '<div class="tiny muted mt8">完成率 ' + rate + '%（只统计已经到点的时间点）</div></div>';
+
+  /* 历史明细 */
+  const keys = Object.keys(state.logs);
+  if (!keys.length) {
+    h += '<div class="card empty"><div class="e">📋</div><div class="t">还没有打卡记录</div>' +
+         '<div class="small">在「今日」页点圆圈打卡后，这里会留下记录。</div></div>';
+    v.innerHTML = h;
+    return;
+  }
+  keys.sort().reverse();
+  const byDate = {};
+  for (let i = 0; i < keys.length; i++) {
+    const p = keys[i].split("|");
+    if (!byDate[p[0]]) byDate[p[0]] = [];
+    const m = findMed(p[1]);
+    let nm = "（已删除的药物）";
+    if (m) {
+      const di = dayIndexOf(m, p[0]);
+      nm = medActiveOn(m, di) ? dayDoseInfo(m, di).name : m.name;
+    }
+    byDate[p[0]].push({ time: p[2], med: m, name: nm, log: state.logs[keys[i]] });
+  }
+  const dates = Object.keys(byDate).sort().reverse().slice(0, 60);
+  h += '<div class="sec-title"><span>打卡明细</span><span class="muted tiny">最近 ' + dates.length + ' 天</span></div>';
+  h += '<div class="card tight">';
+  for (let i = 0; i < dates.length; i++) {
+    const d = dates[i];
+    const arr = byDate[d].sort((a, b) => (a.time < b.time ? -1 : 1));
+    let inner = "";
+    for (let j = 0; j < arr.length; j++) {
+      const r = arr[j];
+      inner += '<div class="it"><span class="grow ellipsis">' + esc(r.name) + '</span>' +
+               '<span class="muted tiny">' + esc(r.time) + '</span>' +
+               (r.log.s === "taken" ? '<span class="chip ok">✓ 已服</span>' : '<span class="chip">— 跳过</span>') + '</div>';
+    }
+    h += '<div class="dayrow"><div class="d"><div class="dw">周' + weekdayOf(d) + '</div>' +
+         '<div class="dd">' + d.slice(5).replace("-", "/") + '</div></div>' +
+         '<div class="list">' + inner + '</div></div>';
+  }
+  h += '</div>';
+  v.innerHTML = h;
+}
+/* ===================== 9. 渲染：设置 ===================== */
+function renderSet() {
+  const v = $("#view-set");
+  const s = state.settings;
+  const alarmOpts = [0, 5, 10, 15, 30, 60];
+  let alarmChips = "";
+  for (let i = 0; i < alarmOpts.length; i++) {
+    const m = alarmOpts[i];
+    const on = s.alarmMin.indexOf(m) >= 0;
+    alarmChips += '<button class="chip' + (on ? " accent" : "") + '" data-act="alarm" data-m="' + m + '">' +
+                  (m === 0 ? "准点" : "提前 " + m + " 分") + (on ? " ✓" : "") + '</button>';
+  }
+
+  let h = "";
+  h += '<div class="sec-title"><span>📅 导出到手机日历（推荐）</span></div>';
+  h += '<div class="card">' +
+       '<div class="small muted mb12">导出后把文件导入手机日历，<b>手机就会在每天该吃药的时间自动响铃提醒</b>——' +
+       '换药或改规律时，重新导出一次再导入即可覆盖更新。</div>' +
+       '<div class="field"><label>导出天数</label>' +
+       '<div class="seg" id="segDays">' +
+         '<button data-act="days" data-d="14"' + (s.exportDays === 14 ? ' class="on"' : "") + '>14 天</button>' +
+         '<button data-act="days" data-d="30"' + (s.exportDays === 30 ? ' class="on"' : "") + '>30 天</button>' +
+         '<button data-act="days" data-d="60"' + (s.exportDays === 60 ? ' class="on"' : '') + '>60 天</button>' +
+         '<button data-act="days" data-d="90"' + (s.exportDays === 90 ? ' class="on"' : '') + '>90 天</button>' +
+       '</div></div>' +
+       '<div class="field"><label>提醒提前量（可多选）</label><div class="row wrap">' + alarmChips + '</div>' +
+       '<div class="hint">例如同时选「准点」和「提前 15 分」，日历会在两个时间各提醒一次。</div></div>' +
+       '<button class="btn block" data-act="exportics">📅 导出日历文件（.ics）</button>' +
+       '<div class="hint mt8">共会导出 <b>' + countEvents(s.exportDays) + '</b> 条提醒。</div>' +
+       '</div>';
+
+  h += '<div class="sec-title"><span>🔔 本页提醒</span></div>';
+  h += '<div class="card">' +
+       '<div class="row between"><div class="grow"><div style="font-weight:700">浏览器通知</div>' +
+       '<div class="tiny muted">页面开着时到点弹通知（关掉页面就失效，所以还是建议用日历）</div></div>' +
+       '<button class="btn sm ' + (s.notifyOn ? "ghost" : "soft") + '" data-act="notify">' + (s.notifyOn ? "已开启" : "开启") + '</button></div>' +
+       '</div>';
+
+  h += '<div class="sec-title"><span>💾 数据备份</span></div>';
+  h += '<div class="card">' +
+       '<div class="small muted mb12">所有数据只存在这台手机的这个浏览器里，不会上传到任何地方。' +
+       '换手机或清理浏览器前，先导出一份备份文件。</div>' +
+       '<div class="row wrap">' +
+       '<button class="btn sm ghost" data-act="exportjson">导出备份</button>' +
+       '<button class="btn sm ghost" data-act="importjson">导入备份</button>' +
+       '<button class="btn sm danger" data-act="clearlogs">清空打卡记录</button>' +
+       '<button class="btn sm danger" data-act="clearall">清空全部数据</button>' +
+       '</div></div>';
+
+  h += '<div class="sec-title"><span>❓ 使用说明</span></div>';
+  h += helpBlock();
+  h += '<div class="note mt12">本程序只做「按时提醒」，不提供任何医疗建议。' +
+       '剂量、疗程一律以医生和药品说明为准；如有不适请及时就医。</div>';
+  v.innerHTML = h;
+}
+
+function countEvents(days) {
+  let n = 0;
+  const t = todayStr();
+  for (let i = 0; i < days; i++) n += getDayPlan(addDays(t, i)).length;
+  return n;
+}
+
+function helpBlock() {
+  return '' +
+  '<details class="help" open><summary>① 第一次怎么填</summary><div class="c">' +
+    '点右上角 <b>＋</b> 或「药物」页的「添加」：<ol>' +
+    '<li><b>药物名称</b>：写你认得出来的名字，如「阿莫西林」。</li>' +
+    '<li><b>开始日期</b>：今天开始就选今天。</li>' +
+    '<li><b>每次服用时间</b>：默认早上 8 点，可以加多个时间（早/中/晚）。</li>' +
+    '<li><b>用量规律</b>：这是关键，见下条。</li>' +
+    '</ol></div></details>' +
+
+  '<details class="help"><summary>② 用量规律怎么填（重点）</summary><div class="c">' +
+    '选「按循环」时，把每天的量用逗号隔开写。系统会<b>循环重复</b>这个序列：<ul>' +
+    '<li>写 <b>1, 0.5</b> → 今天 1 片，明天半片，后天又是 1 片，大后天半片……</li>' +
+    '<li>写 <b>1</b> → 每天都吃 1 片。</li>' +
+    '<li>写 <b>1, 1, 0.5</b> → 1 片、1 片、半片，然后重复。</li>' +
+    '<li>写 <b>1, 1, 1, 1, 1, 0, 0</b> → 吃五天停两天。</li>' +
+    '</ul>' +
+    '选「按阶梯」时，用于<b>逐渐减量</b>（如激素类药物）：填「起始剂量、每几天变一次、每次变多少」。' +
+    '例如起始 3 片、每 3 天减 0.5 片、不低于 0.5 片，就会自动排出 3 / 3 / 3 / 2.5 / 2.5 / 2.5 ……<br><br>' +
+    '<b>选「两种药交替」时</b>，用于两种（或多种）药轮着吃。填法：<ul>' +
+    '<li>第 1 种：药名、每次吃多少、<b>连续吃几天</b></li>' +
+    '<li>第 2 种：同上（点「再加一种药」可以加到 3 种以上）</li>' +
+    '<li><b>开始那天先吃哪个</b>：这就是「初始值」——填今天该吃哪个，后面的日子程序自动往下排</li>' +
+    '</ul>' +
+    '举例：甲 1 天、乙 1 天，开始那天选「甲」→ 今天甲、明天乙、后天甲……<br>' +
+    '举例：甲 3 天、乙 3 天，开始那天选「乙」→ 今天乙、明天乙、后天乙、大后天甲……<br>' +
+    '今日页会直接告诉你<b>今天该吃哪种药、吃多少</b>，不用自己记。<br><br>' +
+    '<b>剂量模式</b>说明：选「每次剂量」表示上面写的是<b>每次</b>吃多少；选「每日总量」表示写的是<b>一天总共</b>吃多少，' +
+    '系统会平均分到当天的几个时间点。（交替模式不需要这一项）</div></details>' +
+
+  '<details class="help"><summary>③ 怎么让它每天提醒我（对接手机闹钟）</summary><div class="c">' +
+    '网页程序<b>不能直接修改手机系统闹钟</b>（这是手机系统的安全限制，任何网页都做不到）。' +
+    '但可以用「日历」达到几乎一样的效果——手机日历的提醒会响铃+震动：<ol>' +
+    '<li>在「设置」页选好天数，点 <b>导出日历文件（.ics）</b>。</li>' +
+    '<li>手机会下载一个 .ics 文件，点开它，选择用<b>日历</b>打开，全部导入。</li>' +
+    '<li>导入后，每天到点手机会自动弹提醒并响铃。把日历的提醒声音调大即可。</li>' +
+    '<li>以后改了药或改了规律，<b>重新导出再导入一次</b>就行（导入时选「覆盖/更新」）。</li>' +
+    '</ol>' +
+    '<b>iPhone：</b>下载后点文件 → 共享 → 用「日历」打开；或在「设置 → 日历 → 导入日程」中导入。<br>' +
+    '<b>安卓：</b>用系统自带的「文件管理」找到下载的 .ics，点开选择日历应用；' +
+    '也可以在手机浏览器里直接点下载提示。<br>' +
+    '<b>想用真正的闹钟：</b>安卓可用「Tasker / 宏」（MacroDroid）等自动化 App 读取日历事件后创建闹钟；' +
+    'iPhone 可在「快捷指令」里建一个「每天定时运行 → 读取日历事件 → 创建闹钟」的自动化。这属于进阶玩法，' +
+    '日历提醒本身已经能满足绝大多数人的需求。</div></details>' +
+
+  '<details class="help"><summary>④ 每天怎么用</summary><div class="c">' +
+    '打开就是「今日」页：<ul>' +
+    '<li>大卡片告诉你<b>今天总共吃多少</b>。</li>' +
+    '<li>下面按时间列出每一顿，吃完点右边的圆圈打卡。</li>' +
+    '<li>点错了再点一次可以取消。</li>' +
+    '<li>长按某一项 → 标记「跳过」（比如这顿忘了、或医生让停一顿）。</li>' +
+    '<li>顶部的 ‹ › 可以查看前后几天，也能补打卡。</li>' +
+    '</ul>「计划」页看未来 14 天每天该吃多少；「记录」页看打卡历史和完成率。</div></details>' +
+
+  '<details class="help"><summary>⑤ 药快吃完了怎么办</summary><div class="c">' +
+    '添加/编辑药物时填上「现有总数」，程序会自动扣掉你已经打卡的用量，' +
+    '在「药物」页显示<b>还剩多少、大约还能吃几天</b>。' +
+    '这样药快吃完时你能提前去医院或药店。</div></details>' +
+
+  '<details class="help"><summary>⑥ 换手机 / 数据会丢吗</summary><div class="c">' +
+    '数据保存在这台手机的浏览器里（localStorage）。<b>清理浏览器数据、卸载浏览器、换手机都会丢</b>。' +
+    '所以：<ul><li>用「设置 → 导出备份」存一份 JSON 文件到微信/网盘；</li>' +
+    '<li>换设备后在「导入备份」里选那个文件即可恢复。</li></ul>' +
+    '另外，iOS 上如果长期不打开网页，Safari 可能会清理本地数据，建议每隔一段时间打开一次，或保留备份。</div></details>';
+}
+/* ===================== 10. 日历(.ics)导出 ===================== */
+function icsEsc(s) {
+  return String(s == null ? "" : s)
+    .replace(/\\/g, "\\\\")
+    .replace(/;/g, "\\;")
+    .replace(/,/g, "\\,")
+    .replace(/\r?\n/g, "\\n");
+}
+/* iCalendar 规定每行不超过 75 字节，超出要折行 */
+function icsFold(line) {
+  if (line.length <= 74) return line;
+  const out = [];
+  let rest = line;
+  out.push(rest.slice(0, 74));
+  rest = rest.slice(74);
+  while (rest.length > 73) {
+    out.push(" " + rest.slice(0, 73));
+    rest = rest.slice(73);
+  }
+  if (rest.length) out.push(" " + rest);
+  return out.join("\r\n");
+}
+function utcStamp() {
+  const d = new Date();
+  return d.getUTCFullYear() + pad2(d.getUTCMonth() + 1) + pad2(d.getUTCDate()) + "T" +
+         pad2(d.getUTCHours()) + pad2(d.getUTCMinutes()) + pad2(d.getUTCSeconds()) + "Z";
+}
+function icsDT(dateStr, timeStr, addMin) {
+  const t = (timeStr || "08:00").split(":");
+  let hh = parseInt(t[0], 10) || 0, mm = parseInt(t[1], 10) || 0;
+  if (addMin) {
+    mm += addMin;
+    hh += Math.floor(mm / 60);
+    mm = mm % 60;
+    hh = ((hh % 24) + 24) % 24;
+  }
+  return dateStr.replace(/-/g, "") + "T" + pad2(hh) + pad2(mm) + "00";
+}
+
+function buildICS(days) {
+  const L = [];
+  L.push("BEGIN:VCALENDAR");
+  L.push("VERSION:2.0");
+  L.push("PRODID:-//HealthCare//MedReminder//CN");
+  L.push("CALSCALE:GREGORIAN");
+  L.push("METHOD:PUBLISH");
+  L.push("X-WR-CALNAME:" + icsEsc("服药提醒"));
+  L.push("X-WR-TIMEZONE:" + icsEsc("Asia/Shanghai"));
+
+  const stamp = utcStamp();
+  const start = todayStr();
+  const alarms = (state.settings.alarmMin && state.settings.alarmMin.length)
+    ? state.settings.alarmMin.slice().sort((a, b) => b - a) : [0];
+
+  for (let i = 0; i < days; i++) {
+    const date = addDays(start, i);
+    const items = getDayPlan(date);
+    for (let j = 0; j < items.length; j++) {
+      const it = items[j];
+      const med = it.med;
+      const unit = it.unit;
+      const title = "服药：" + it.name + " " + doseNum(it.dose) + unit;
+      let desc = "药物：" + it.name + "\n";
+      desc += "本次用量：" + doseNum(it.dose) + " " + unit + "\n";
+      const di = it.dayIndex;
+      desc += "今日总量：" + doseNum(dailyTotal(med, di)) + " " + unit + "\n";
+      if (it.strength) desc += "规格：" + it.strength + "\n";
+      if (med.mode === "alt") desc += "交替方案：" + altSummaryText(med) + "\n";
+      if (med.meal) desc += "服用要求：" + med.meal + "\n";
+      if (med.note) desc += "备注：" + med.note + "\n";
+      desc += "（由「服药提醒」生成）";
+
+      L.push("BEGIN:VEVENT");
+      L.push("UID:" + med.id + "-" + date.replace(/-/g, "") + "-" + (it.time.replace(":", "")) + "@med-reminder.local");
+      L.push("DTSTAMP:" + stamp);
+      L.push("DTSTART:" + icsDT(date, it.time, 0));
+      L.push("DTEND:" + icsDT(date, it.time, 10));
+      L.push("SUMMARY:" + icsEsc(title));
+      L.push("DESCRIPTION:" + icsEsc(desc));
+      L.push("TRANSP:TRANSPARENT");
+      L.push("SEQUENCE:0");
+      for (let k = 0; k < alarms.length; k++) {
+        const m = alarms[k];
+        L.push("BEGIN:VALARM");
+        L.push("ACTION:DISPLAY");
+        L.push("DESCRIPTION:" + icsEsc(title));
+        L.push("TRIGGER:" + (m === 0 ? "PT0M" : "-PT" + m + "M"));
+        L.push("END:VALARM");
+      }
+      L.push("END:VEVENT");
+    }
+  }
+  L.push("END:VCALENDAR");
+  return L.map(icsFold).join("\r\n") + "\r\n";
+}
+
+/* ===================== 11. 文件下载 ===================== */
+function download(filename, text, mime) {
+  try {
+    const blob = new Blob([text], { type: (mime || "text/plain") + ";charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.rel = "noopener";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 4000);
+    return true;
+  } catch (e) {
+    try {
+      const w = window.open("", "_blank");
+      if (w) { w.document.write("<pre>" + esc(text) + "</pre>"); return true; }
+    } catch (e2) { /* ignore */ }
+    toast("导出失败，请换个浏览器试试");
+    return false;
+  }
+}
+
+function doExportICS() {
+  if (!state.meds.length) { toast("还没有添加药物"); return; }
+  const days = num(state.settings.exportDays) || 60;
+  const ics = buildICS(days);
+  const n = countEvents(days);
+  if (!n) { toast("未来 " + days + " 天内没有服药安排"); return; }
+  const name = "服药提醒_" + todayStr() + "_" + days + "天.ics";
+  if (download(name, ics, "text/calendar")) {
+    toast("已导出 " + n + " 条提醒，请用手机日历打开该文件");
+  }
+}
+
+function doExportJSON() {
+  const data = JSON.stringify(state, null, 2);
+  download("服药提醒备份_" + todayStr() + ".json", data, "application/json");
+  toast("备份已导出");
+}
+
+function doImportJSON() {
+  const inp = document.createElement("input");
+  inp.type = "file";
+  inp.accept = ".json,application/json";
+  inp.onchange = function () {
+    const f = inp.files && inp.files[0];
+    if (!f) return;
+    const fr = new FileReader();
+    fr.onload = function () {
+      try {
+        const o = JSON.parse(String(fr.result));
+        if (!o || !Array.isArray(o.meds)) throw new Error("格式不对");
+        confirmDlg("导入备份", "将用备份文件覆盖当前全部数据，确定吗？", function () {
+          state = {
+            v: 1,
+            meds: o.meds,
+            logs: o.logs && typeof o.logs === "object" ? o.logs : {},
+            settings: Object.assign(defaultState().settings, o.settings || {}),
+            uiDate: ""
+          };
+          saveState();
+          renderAll();
+          toast("导入成功，共 " + state.meds.length + " 种药");
+        });
+      } catch (e) {
+        toast("这个文件不是有效的备份文件");
+      }
+    };
+    fr.readAsText(f);
+  };
+  inp.click();
+}
+/* ===================== 12. 药物编辑表单 ===================== */
+let draft = null;
+
+function blankMed() {
+  return {
+    id: uid(),
+    name: "",
+    strength: "",
+    unit: "片",
+    color: COLORS[0],
+    startDate: todayStr(),
+    durationDays: "",
+    times: ["08:00"],
+    doseMode: "perDose",
+    mode: "cycle",
+    cycle: [1],
+    step: { start: 1, delta: -0.5, everyDays: 3, min: "", max: "" },
+    alt: {
+      members: [
+        { name: "", dose: 1, unit: "片" },
+        { name: "", dose: 1, unit: "片" }
+      ],
+      segments: [{ m: 0, days: 1 }, { m: 1, days: 1 }],
+      startMember: 0
+    },
+    meal: "",
+    note: "",
+    stock: "",
+    enabled: true
+  };
+}
+
+function openMedForm(id) {
+  const exist = id ? findMed(id) : null;
+  draft = exist ? JSON.parse(JSON.stringify(exist)) : blankMed();
+  if (!draft.times || !draft.times.length) draft.times = ["08:00"];
+  if (!draft.step) draft.step = { start: 1, delta: -0.5, everyDays: 3, min: "", max: "" };
+  if (!draft.cycle || !draft.cycle.length) draft.cycle = [1];
+  if (!draft.alt || !draft.alt.members || !draft.alt.members.length) {
+    draft.alt = {
+      members: [{ name: "", dose: 1, unit: "片" }, { name: "", dose: 1, unit: "片" }],
+      segments: [{ m: 0, days: 1 }, { m: 1, days: 1 }],
+      startMember: 0
+    };
+  }
+  if (!draft.alt.segments || !draft.alt.segments.length) {
+    draft.alt.segments = draft.alt.members.map(function (m, i) { return { m: i, days: 1 }; });
+  }
+
+  $("#sheetTitle").textContent = exist ? "编辑药物" : "添加药物";
+  renderFormBody();
+  $("#sheetFoot").innerHTML =
+    '<button class="btn ghost" data-act="sheetclose">取消</button>' +
+    '<button class="btn" data-act="savemed">保存</button>';
+  $("#sheetWrap").classList.remove("hidden");
+  $("#sheetBody").scrollTop = 0;
+}
+
+function unitOptions(sel) {
+  return UNITS.map(function (u) { return '<option' + (u === sel ? " selected" : "") + '>' + u + "</option>"; }).join("");
+}
+function mealOptions(sel) {
+  return MEALS.map(function (u) {
+    return '<option value="' + u + '"' + (u === sel ? " selected" : "") + '>' + (u || "不限") + "</option>";
+  }).join("");
+}
+function colorChips(sel) {
+  return COLORS.map(function (c) {
+    return '<button type="button" data-act="pickcolor" data-c="' + c + '" style="width:40px;height:40px;border-radius:50%;background:' + c +
+           ';border:3px solid ' + (c === sel ? "var(--text)" : "transparent") + '"></button>';
+  }).join("");
+}
+
+function renderFormBody() {
+  const d = draft;
+  let h = "";
+  h += '<div class="field"><label>' + (d.mode === "alt" ? "方案名称（留空自动生成）" : "药物名称 *") + '</label>' +
+       '<input type="text" id="f-name" placeholder="' + (d.mode === "alt" ? "例如：降压交替方案" : "例如：阿莫西林") + '" value="' + esc(d.name) + '"></div>';
+
+  h += '<div class="grid2">' +
+       '<div class="field"><label>规格（可不填）</label><input type="text" id="f-strength" placeholder="例如 0.25g/片" value="' + esc(d.strength) + '"></div>' +
+       '<div class="field"><label>单位</label><select id="f-unit">' + unitOptions(d.unit) + "</select></div>" +
+       "</div>";
+
+  h += '<div class="grid2">' +
+       '<div class="field"><label>开始日期 *</label><input type="date" id="f-start" value="' + esc(d.startDate) + '"></div>' +
+       '<div class="field"><label>服用天数（留空=长期）</label><input type="number" id="f-days" inputmode="numeric" min="1" step="1" placeholder="如 7" value="' + esc(d.durationDays) + '"></div>' +
+       "</div>";
+
+  h += '<div class="field"><label>每天服用时间</label><div class="timelist" id="f-times"></div>' +
+       '<div class="row mt8"><input type="time" id="f-newtime" value="08:00" style="flex:1">' +
+       '<button class="btn sm soft" data-act="addtime">＋ 添加</button></div>' +
+       '<div class="hint">一天吃几次就加几个时间，例如早上 08:00、晚上 20:00。</div></div>';
+
+  h += '<div class="field"><label>用量规律</label>' +
+       '<div class="seg" id="segMode" style="font-size:13px">' +
+         '<button data-act="mode" data-v="cycle"' + (d.mode === "step" || d.mode === "alt" ? "" : ' class="on"') + '>按循环</button>' +
+         '<button data-act="mode" data-v="step"' + (d.mode === "step" ? ' class="on"' : "") + '>按阶梯</button>' +
+         '<button data-act="mode" data-v="alt"' + (d.mode === "alt" ? ' class="on"' : "") + '>两种药交替</button>' +
+       "</div></div>";
+
+  if (d.mode === "alt") {
+    const ms = d.alt.members;
+    h += '<div class="card" style="background:var(--card2)">';
+    h += '<div class="small muted mb8">交替吃的药 —— 填药名 / 每次吃多少 / 连续吃几天</div>';
+    for (let i = 0; i < ms.length; i++) {
+      const sg = (d.alt.segments || []).filter(function (x) { return Math.round(num(x.m)) === i; })[0];
+      const days = sg ? sg.days : 1;
+      h += '<div class="row mb8" style="gap:6px;align-items:center">' +
+             '<span class="chip" style="min-width:56px;justify-content:center">第' + (i + 1) + '种</span>' +
+             '<input type="text" id="f-altname-' + i + '" placeholder="药名" value="' + esc(ms[i].name) + '" style="flex:3;min-width:0">' +
+             '<input type="number" id="f-altdose-' + i + '" inputmode="decimal" step="0.25" min="0" value="' + esc(ms[i].dose) + '" style="flex:1.2;min-width:0">' +
+             '<input type="number" id="f-altdays-' + i + '" inputmode="numeric" min="1" step="1" value="' + esc(days) + '" style="flex:1;min-width:0">' +
+             (ms.length > 2 ? '<button class="icon-btn" data-act="rmmember" data-i="' + i + '" style="width:40px;height:40px">✕</button>' : "") +
+           '</div>';
+    }
+    h += '<div class="tiny muted mb8">三个框依次是：<b>药名</b> / <b>每次剂量</b> / <b>连续天数</b>（单位 ' + esc(d.unit || "片") + '）</div>';
+    h += '<button class="btn sm ghost" data-act="addmember">＋ 再加一种药</button>';
+    h += '<div class="field mt12"><label>开始那天（' + esc(d.startDate) + '）先吃哪个？</label>' +
+         '<select id="f-altstart">' +
+         ms.map(function (m, i) {
+           return '<option value="' + i + '"' + (Math.round(num(d.alt.startMember)) === i ? " selected" : "") + '>' +
+                  '第' + (i + 1) + '种' + (m.name ? "：" + esc(m.name) : "") + "</option>";
+         }).join("") +
+         "</select>" +
+         '<div class="hint">这就是「初始值」——填今天该吃哪个，后面的日子程序自动往下排。</div></div>';
+    h += "</div>";
+  } else {
+  h += '<div class="field"><label>上面填的数字表示</label>' +
+       '<div class="seg" id="segDoseMode">' +
+         '<button data-act="dosemode" data-v="perDose"' + (d.doseMode !== "perDay" ? ' class="on"' : "") + '>每次剂量</button>' +
+         '<button data-act="dosemode" data-v="perDay"' + (d.doseMode === "perDay" ? ' class="on"' : "") + '>每日总量</button>' +
+       "</div>" +
+       '<div class="hint">选「每日总量」时，系统会把总量平均分到上面几个时间点。</div></div>';
+
+  if (d.mode === "step") {
+    const s = d.step;
+    h += '<div class="card" style="background:var(--card2)">' +
+         '<div class="grid2">' +
+         '<div class="field"><label>起始剂量</label><input type="number" id="f-stepstart" inputmode="decimal" step="0.25" min="0" value="' + esc(s.start) + '"></div>' +
+         '<div class="field"><label>每几天变一次</label><input type="number" id="f-stepevery" inputmode="numeric" step="1" min="1" value="' + esc(s.everyDays) + '"></div>' +
+         "</div>" +
+         '<div class="field"><label>每次变化量（减量填负数）</label><input type="number" id="f-stepdelta" inputmode="decimal" step="0.25" value="' + esc(s.delta) + '"></div>' +
+         '<div class="grid2">' +
+         '<div class="field"><label>不低于（可留空）</label><input type="number" id="f-stepmin" inputmode="decimal" step="0.25" min="0" value="' + esc(s.min) + '"></div>' +
+         '<div class="field"><label>不超过（可留空）</label><input type="number" id="f-stepmax" inputmode="decimal" step="0.25" min="0" value="' + esc(s.max) + '"></div>' +
+         "</div></div>";
+  } else {
+    h += '<div class="field"><label>剂量序列（用逗号隔开，会循环重复）</label>' +
+         '<input type="text" id="f-cycle" inputmode="decimal" placeholder="例如：1, 0.5" value="' + esc((d.cycle || []).join(", ")) + '">' +
+         '<div class="row wrap mt8">' +
+           '<button class="chip" data-act="preset" data-v="1">每天同量 1</button>' +
+           '<button class="chip" data-act="preset" data-v="1,0.5">1 / 半片 交替</button>' +
+           '<button class="chip" data-act="preset" data-v="1,1,0.5">1 / 1 / 半片</button>' +
+           '<button class="chip" data-act="preset" data-v="2,1">2 / 1 交替</button>' +
+           '<button class="chip" data-act="preset" data-v="1,1,1,1,1,0,0">吃 5 天停 2 天</button>' +
+         "</div>" +
+         '<div class="hint">写 <b>1, 0.5</b> 就是：今天 1 片 → 明天半片 → 后天 1 片 → 大后天半片 ……</div></div>';
+  }
+  } /* end: 非交替模式 */
+
+  h += '<div class="sec-title" style="margin-top:4px"><span>未来 14 天预览</span></div>';
+  h += '<div class="preview" id="f-preview"></div>';
+
+  h += '<div class="grid2 mt16">' +
+       '<div class="field"><label>服用要求</label><select id="f-meal">' + mealOptions(d.meal) + "</select></div>" +
+       '<div class="field"><label>现有总数（可不填）</label><input type="number" id="f-stock" inputmode="decimal" step="1" min="0" placeholder="如 30" value="' + esc(d.stock) + '"></div>' +
+       "</div>";
+
+  h += '<div class="field"><label>备注</label><textarea id="f-note" placeholder="例如：医生嘱咐饭后半小时吃，忌酒">' + esc(d.note) + "</textarea></div>";
+
+  h += '<div class="field"><label>标记颜色</label><div class="row wrap">' + colorChips(d.color) + "</div></div>";
+
+  $("#sheetBody").innerHTML = h;
+  renderTimes();
+  updatePreview();
+}
+
+function renderTimes() {
+  const box = $("#f-times");
+  if (!box) return;
+  if (!draft.times.length) { box.innerHTML = '<span class="muted small">还没设置时间</span>'; return; }
+  box.innerHTML = draft.times.slice().sort().map(function (t) {
+    return '<span class="timechip">' + esc(t) + '<button type="button" data-act="rmtime" data-t="' + esc(t) + '" aria-label="删除">✕</button></span>';
+  }).join("");
+}
+
+/* 把表单内容读进 draft（不改变正在编辑的 DOM） */
+function readForm() {
+  const g = function (id) { const e = $(id); return e ? e.value : ""; };
+  draft.name = g("#f-name").trim();
+  draft.strength = g("#f-strength").trim();
+  draft.unit = g("#f-unit") || "片";
+  draft.startDate = g("#f-start") || todayStr();
+  draft.durationDays = g("#f-days").trim();
+  draft.meal = g("#f-meal");
+  draft.note = g("#f-note").trim();
+  draft.stock = g("#f-stock").trim();
+  if (draft.mode === "alt") {
+    const ms = draft.alt.members;
+    for (let i = 0; i < ms.length; i++) {
+      ms[i].name = g("#f-altname-" + i).trim();
+      ms[i].dose = Math.max(0, num(g("#f-altdose-" + i)));
+      ms[i].unit = draft.unit || "片";
+    }
+    draft.alt.segments = ms.map(function (m, i) {
+      return { m: i, days: Math.max(1, Math.round(num(g("#f-altdays-" + i)) || 1)) };
+    });
+    const sv = g("#f-altstart");
+    draft.alt.startMember = sv === "" ? 0 : Math.max(0, Math.round(num(sv)));
+    draft.alt.startMember = Math.min(draft.alt.startMember, ms.length - 1);
+  } else if (draft.mode === "step") {
+    draft.step = {
+      start: num(g("#f-stepstart")),
+      everyDays: Math.max(1, Math.round(num(g("#f-stepevery")) || 1)),
+      delta: num(g("#f-stepdelta")),
+      min: g("#f-stepmin").trim(),
+      max: g("#f-stepmax").trim()
+    };
+  } else {
+    const raw = g("#f-cycle");
+    const arr = raw.split(/[,，\s]+/).map(function (x) { return x.trim(); })
+      .filter(function (x) { return x !== ""; })
+      .map(function (x) { return num(x); })
+      .filter(function (x) { return !isNaN(x) && x >= 0; });
+    draft.cycle = arr.length ? arr : [0];
+  }
+}
+
+function updatePreview() {
+  readForm();
+  const box = $("#f-preview");
+  if (!box) return;
+  const isAlt = draft.mode === "alt";
+  if (!isAlt && !draft.name) {
+    box.innerHTML = '<span class="muted">填上药名和用量后，这里会显示每天的安排</span>';
+    return;
+  }
+  if (isAlt && !draft.alt.members.some(function (m) { return m.name; })) {
+    box.innerHTML = '<span class="muted">填上两种药的名称后，这里会显示每天的安排</span>';
+    return;
+  }
+  const rows = previewDays(draft, 14);
+  const n = Math.max(1, (draft.times && draft.times.length) || 1);
+  let h = "";
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    const info = dayDoseInfo(draft, r.i);
+    const total = Math.round(info.dose * n * 1000) / 1000;
+    h += '<div class="pr"><span>' + dateLabel(r.date) + "（周" + weekdayOf(r.date) + '）</span>' +
+         '<span><b>' + esc(info.name) + " " + doseNum(info.dose) + " " + esc(info.unit) + '</b>' +
+         (n > 1 ? '<span class="muted"> × ' + n + " 次 = " + doseNum(total) + " " + esc(info.unit) + "</span>" : "") +
+         "</span></div>";
+  }
+  box.innerHTML = h;
+}
+
+function saveMedForm() {
+  readForm();
+  if (draft.mode === "alt") {
+    const named = draft.alt.members.filter(function (m) { return m.name; });
+    if (named.length < 2) { toast("请至少填两种药的名称"); const e = $("#f-altname-1"); if (e) e.focus(); return; }
+    if (!draft.name) draft.name = named.map(function (m) { return m.name; }).join(" ⇄ ");
+  }
+  if (!draft.name) { toast("请填写药物名称"); const e = $("#f-name"); if (e) e.focus(); return; }
+  if (!draft.times.length) draft.times = ["08:00"];
+  draft.startDate = draft.startDate || todayStr();
+
+  const idx = state.meds.findIndex(function (m) { return m.id === draft.id; });
+  if (idx >= 0) state.meds[idx] = JSON.parse(JSON.stringify(draft));
+  else state.meds.push(JSON.parse(JSON.stringify(draft)));
+  saveState();
+  closeSheet();
+  renderAll();
+  toast(idx >= 0 ? "已保存修改" : "已添加：" + draft.name);
+}
+/* ===================== 13. 抽屉与确认框 ===================== */
+function closeSheet() { $("#sheetWrap").classList.add("hidden"); }
+function closeDlg() { $("#dlgWrap").classList.add("hidden"); }
+
+function confirmDlg(title, msg, onOk, okText) {
+  $("#dlgTitle").textContent = title;
+  $("#dlgBody").innerHTML = '<div style="font-size:15px;line-height:1.7">' + msg + "</div>";
+  $("#dlgFoot").innerHTML =
+    '<button class="btn ghost" data-act="dlgclose">取消</button>' +
+    '<button class="btn danger" data-act="dlgok">' + esc(okText || "确定") + "</button>";
+  $("#dlgWrap").classList.remove("hidden");
+  $("#dlgWrap")._onOk = onOk;
+}
+
+/* ===================== 14. 视图切换与总渲染 ===================== */
+let curTab = "today";
+
+function switchTab(name) {
+  curTab = name;
+  $$(".tabbar button").forEach(function (b) {
+    b.classList.toggle("on", b.getAttribute("data-tab") === name);
+  });
+  $$(".view").forEach(function (s) { s.classList.remove("on"); });
+  const el = $("#view-" + name);
+  if (el) el.classList.add("on");
+  window.scrollTo(0, 0);
+  renderTab(name);
+}
+function renderTab(name) {
+  if (name === "today") renderToday();
+  else if (name === "plan") renderPlan();
+  else if (name === "meds") renderMeds();
+  else if (name === "logs") renderLogs();
+  else if (name === "set") renderSet();
+}
+function renderAll() {
+  const d = currentDate();
+  $("#todayLabel").textContent = dateLabel(d) + " · " + dateFull(d);
+  const n = pendingCount(todayStr());
+  const badge = $("#tabBadge");
+  if (n > 0 && state.meds.length) {
+    badge.textContent = String(n);
+    badge.classList.remove("hidden");
+  } else {
+    badge.classList.add("hidden");
+  }
+  renderTab(curTab);
+}
+
+/* ===================== 15. 交互事件（事件委托） ===================== */
+document.addEventListener("click", function (ev) {
+  const t = ev.target.closest("[data-act]");
+  const tabBtn = ev.target.closest(".tabbar button[data-tab]");
+  if (tabBtn) { switchTab(tabBtn.getAttribute("data-tab")); return; }
+  if (!t) return;
+  const act = t.getAttribute("data-act");
+
+  switch (act) {
+    case "prevday":
+      state.uiDate = addDays(currentDate(), -1); saveState(); renderAll(); break;
+    case "nextday":
+      state.uiDate = addDays(currentDate(), 1); saveState(); renderAll(); break;
+
+    case "addmed":
+      openMedForm(null); break;
+
+    case "toggle": {
+      const k = t.getAttribute("data-k");
+      const parts = k.split("|");
+      const cur = state.logs[k];
+      if (cur && cur.s === "taken") setLog(parts[0], parts[1], parts[2], null);
+      else setLog(parts[0], parts[1], parts[2], "taken");
+      renderAll();
+      break;
+    }
+
+    case "editmed":
+      openMedForm(t.getAttribute("data-id")); break;
+
+    case "delmed": {
+      const id = t.getAttribute("data-id");
+      const m = findMed(id);
+      if (!m) break;
+      confirmDlg("删除药物", "确定删除「" + esc(m.name) + "」吗？<br>该药物的打卡记录也会一起删掉，无法恢复。", function () {
+        state.meds = state.meds.filter(function (x) { return x.id !== id; });
+        const nk = {};
+        for (const k in state.logs) if (k.split("|")[1] !== id) nk[k] = state.logs[k];
+        state.logs = nk;
+        saveState(); closeDlg(); renderAll(); toast("已删除");
+      }, "删除");
+      break;
+    }
+
+    case "togmed": {
+      const m = findMed(t.getAttribute("data-id"));
+      if (!m) break;
+      m.enabled = m.enabled === false;
+      saveState(); renderAll();
+      toast(m.enabled === false ? "已暂停（不再提醒）" : "已恢复");
+      break;
+    }
+
+    case "sheetclose": closeSheet(); break;
+    case "savemed": saveMedForm(); break;
+
+    case "addtime": {
+      const e = $("#f-newtime");
+      const v = e ? e.value : "";
+      if (!v) { toast("请先选一个时间"); break; }
+      if (draft.times.indexOf(v) < 0) draft.times.push(v);
+      draft.times.sort();
+      renderTimes(); updatePreview();
+      break;
+    }
+    case "rmtime": {
+      const v = t.getAttribute("data-t"), i = draft.times.indexOf(v);
+      if (i >= 0) draft.times.splice(i, 1);
+      renderTimes(); updatePreview();
+      break;
+    }
+
+    case "dosemode":
+      readForm();
+      draft.doseMode = t.getAttribute("data-v");
+      renderFormBody();
+      break;
+
+    case "mode":
+      readForm();
+      draft.mode = t.getAttribute("data-v");
+      renderFormBody();
+      break;
+
+    case "preset": {
+      const raw = t.getAttribute("data-v");
+      const arr = raw.split(",").map(function (x) { return num(x.trim()); }).filter(function (x) { return !isNaN(x); });
+      draft.cycle = arr.length ? arr : [1];
+      const ci = $("#f-cycle");
+      if (ci) ci.value = draft.cycle.join(", ");
+      updatePreview();
+      break;
+    }
+
+    case "pickcolor":
+      readForm();
+      draft.color = t.getAttribute("data-c");
+      renderFormBody();
+      break;
+
+    case "addmember": {
+      readForm();
+      const days = draft.alt.segments.map(function (s) { return s.days; });
+      draft.alt.members.push({
+        name: "", dose: draft.alt.members[0] ? draft.alt.members[0].dose : 1, unit: draft.unit || "片"
+      });
+      days.push(1);
+      draft.alt.segments = draft.alt.members.map(function (m, k) { return { m: k, days: days[k] || 1 }; });
+      renderFormBody();
+      break;
+    }
+
+    case "rmmember": {
+      readForm();
+      const i = Math.round(num(t.getAttribute("data-i")));
+      if (draft.alt.members.length > 2 && i >= 0 && i < draft.alt.members.length) {
+        const days = draft.alt.segments.map(function (s) { return s.days; });
+        days.splice(i, 1);
+        draft.alt.members.splice(i, 1);
+        draft.alt.segments = draft.alt.members.map(function (m, k) { return { m: k, days: days[k] || 1 }; });
+        if (draft.alt.startMember >= draft.alt.members.length) draft.alt.startMember = 0;
+        renderFormBody();
+      }
+      break;
+    }
+
+    case "alarm": {
+      const m = num(t.getAttribute("data-m"));
+      const arr = state.settings.alarmMin || [];
+      const i = arr.indexOf(m);
+      if (i >= 0) arr.splice(i, 1); else arr.push(m);
+      state.settings.alarmMin = arr;
+      saveState(); renderSet();
+      break;
+    }
+
+    case "days":
+      state.settings.exportDays = num(t.getAttribute("data-d"));
+      saveState(); renderSet();
+      break;
+
+    case "exportics": doExportICS(); break;
+    case "exportjson": doExportJSON(); break;
+    case "importjson": doImportJSON(); break;
+
+    case "notify": {
+      if (!("Notification" in window)) { toast("这个浏览器不支持通知，请用日历方式"); break; }
+      if (state.settings.notifyOn) {
+        state.settings.notifyOn = false; saveState(); renderSet(); toast("已关闭页面提醒");
+      } else {
+        Notification.requestPermission().then(function (p) {
+          state.settings.notifyOn = (p === "granted");
+          saveState(); renderSet();
+          toast(p === "granted" ? "已开启页面提醒" : "未获得通知权限");
+        });
+      }
+      break;
+    }
+
+    case "clearlogs":
+      confirmDlg("清空打卡记录", "将删除全部打卡记录（药物和计划保留），无法恢复。确定吗？", function () {
+        state.logs = {}; saveState(); closeDlg(); renderAll(); toast("打卡记录已清空");
+      }, "清空");
+      break;
+
+    case "clearall":
+      confirmDlg("清空全部数据", "将删除<b>所有药物、计划和打卡记录</b>，无法恢复。<br>建议先「导出备份」。确定吗？", function () {
+        state = defaultState(); state.uiDate = todayStr();
+        saveState(); closeDlg(); renderAll(); toast("已清空");
+      }, "全部清空");
+      break;
+
+    case "dlgclose": closeDlg(); break;
+    case "dlgok": {
+      const fn = $("#dlgWrap")._onOk;
+      if (typeof fn === "function") fn();
+      break;
+    }
+  }
+});
+
+/* 表单内输入 → 实时刷新预览 */
+function isPreviewField(id) {
+  if (id.indexOf("f-alt") === 0) return true;
+  return id === "f-cycle" || id === "f-stepstart" || id === "f-stepevery" || id === "f-stepdelta" ||
+         id === "f-stepmin" || id === "f-stepmax" || id === "f-unit" || id === "f-name";
+}
+document.addEventListener("input", function (ev) {
+  if (!draft) return;
+  if (isPreviewField(ev.target.id || "")) updatePreview();
+});
+document.addEventListener("change", function (ev) {
+  if (!draft) return;
+  if (isPreviewField(ev.target.id || "")) updatePreview();
+});
+
+/* 点遮罩关闭 */
+$("#sheetWrap").addEventListener("click", function (ev) { if (ev.target === this) closeSheet(); });
+$("#dlgWrap").addEventListener("click", function (ev) { if (ev.target === this) closeDlg(); });
+$("#sheetClose").addEventListener("click", closeSheet);
+
+/* 长按服药项 → 标记跳过 */
+let lpTimer = null, lpFired = false;
+function lpStart(ev) {
+  const row = ev.target.closest(".dose");
+  if (!row || ev.target.closest("button")) return;
+  lpFired = false;
+  clearTimeout(lpTimer);
+  lpTimer = setTimeout(function () {
+    lpFired = true;
+    const btn = row.querySelector("[data-k]");
+    if (!btn) return;
+    const k = btn.getAttribute("data-k");
+    const p = k.split("|");
+    const med = findMed(p[1]);
+    confirmDlg("标记这一顿", "把「" + esc(med ? med.name : "") + " " + esc(p[2]) + "」标记为：", function () {
+      setLog(p[0], p[1], p[2], "skipped");
+      closeDlg(); renderAll(); toast("已标记跳过");
+    }, "跳过这顿");
+  }, 550);
+}
+function lpEnd() { clearTimeout(lpTimer); }
+document.addEventListener("pointerdown", lpStart);
+document.addEventListener("pointerup", lpEnd);
+document.addEventListener("pointercancel", lpEnd);
+document.addEventListener("pointermove", function () { clearTimeout(lpTimer); }, { passive: true });
+document.addEventListener("contextmenu", function (ev) {
+  if (ev.target.closest(".dose")) ev.preventDefault();
+});
+
+/* ===================== 16. 到点提醒（页面打开时） ===================== */
+let notified = {};
+function checkNotify() {
+  if (!state.settings.notifyOn) return;
+  if (!("Notification" in window) || Notification.permission !== "granted") return;
+  const today = todayStr();
+  const hm = nowHM();
+  const items = getDayPlan(today);
+  for (let i = 0; i < items.length; i++) {
+    const it = items[i];
+    if (it.time !== hm) continue;
+    if (it.log) continue;
+    const key = today + it.key;
+    if (notified[key]) continue;
+    notified[key] = 1;
+    try {
+      new Notification("该吃药了： " + it.name, {
+        body: "本次 " + doseText(it.dose, it.unit, true) + (it.med.meal ? "（" + it.med.meal + "）" : ""),
+        tag: key
+      });
+    } catch (e) { /* ignore */ }
+  }
+}
+
+/* ===================== 17. 启动 ===================== */
+function init() {
+  if (!state.uiDate) state.uiDate = todayStr();
+  /* 日期跨天时自动回到今天 */
+  if (state.uiDate !== todayStr() && diffDays(state.uiDate, todayStr()) > 0) state.uiDate = todayStr();
+  renderAll();
+  setInterval(function () {
+    checkNotify();
+    /* 跨天自动刷新 */
+    if (state.uiDate === todayStr() && new Date().getHours() === 0 && new Date().getMinutes() < 2) renderAll();
+  }, 30000);
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden) {
+      if (state.uiDate && diffDays(state.uiDate, todayStr()) > 0) state.uiDate = todayStr();
+      renderAll();
+    }
+  });
+  window.addEventListener("beforeunload", saveState);
+}
+init();
+</script>
+</body>
+</html>
+
