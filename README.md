@@ -1,9 +1,11 @@
-﻿<div align="center">
+<div align="center">
 
 # 减重助手 · Health Tools
 
 **两个不需要账号、不需要联网、不需要安装的健康记录工具。**
 **下载一个 HTML 文件，双击就能用。**
+
+[![tests](https://github.com/a333uu/health-tools/actions/workflows/tests.yml/badge.svg)](https://github.com/a333uu/health-tools/actions/workflows/tests.yml)
 
 </div>
 
@@ -218,6 +220,21 @@ node tests/sim_pool_v10.mjs       #  12 项：机制判据（跨 TDEE 与性别�
 
 **不接受的 PR**：任何会削弱"吃更少不可能攒更多"这条约束的改动。
 提这类 PR 请附 `tests/invariant_pool.mjs` 的通过输出。
+
+---
+
+## 关于维护
+
+这是个**个人项目**，我做它首先是给自己用。
+
+- 我会看 issue，但**不承诺响应时间**
+- 功能建议可以提，但**不保证实现**
+- 安全问题请优先提 issue，我会尽快看
+
+如果一个 PR 放了一个月没人理，不是我不在乎，是我在忙别的 —— 欢迎再来推我一下。
+
+这个项目没有依赖、没有后端、没有构建步骤，所以**不存在"需要定期维护才不会烂"的东西**。
+它更像一本小册子：放在那儿，过几年打开还是能看。
 
 ---
 
